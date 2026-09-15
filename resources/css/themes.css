@@ -1,0 +1,170 @@
+/* ── Default / Fallback (Adultos-Día) ──────────────────────────── */
+:root {
+  --color-primary: #1D3557;
+  --color-secondary: #A8DADC;
+  --font-size-base: 18px;
+
+  /* Layout */
+  --h-header: 64px;
+  --bg-page: #F0F2F5;
+  --bg-surface: #FFFFFF;
+  --bg-header: #FFFFFF;
+  --bg-sidebar: #1E293B;
+
+  /* Text */
+  --text-body: #1F2937;
+  --text-muted: #5E6470;
+  --text-sidebar: #94A3B8;
+  --text-sidebar-active: #FFFFFF;
+  --text-sidebar-heading: #FFFFFF;
+
+  /* Borders */
+  --border-light: #E5E7EB;
+  --border-sidebar: #334155;
+  --border-sidebar-inner: #374151;
+
+  /* Sidebar extras */
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --bg-sidebar-active: rgba(255, 255, 255, 0.08);
+  --bg-sidebar-avatar: #334155;
+}
+
+/* Aplica font-size base en <html> para que rem escale completo */
+html {
+  font-size: var(--font-size-base);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ADULTOS — Formal, legible, profesional
+   ══════════════════════════════════════════════════════════════ */
+[data-tema="adultos-dia"] {
+  --color-primary: #1D3557;
+  --color-secondary: #A8DADC;
+  --font-size-base: 18px;
+  --bg-page: #F0F2F5;
+  --bg-surface: #FFFFFF;
+  --bg-header: #FFFFFF;
+  --bg-sidebar: #1E293B;
+  --text-body: #1F2937;
+  --text-muted: #5E6470;    /* AA 4.6:1 sobre bg-page */
+  --text-sidebar: #94A3B8;
+  --text-sidebar-active: #FFFFFF;
+  --text-sidebar-heading: #FFFFFF;
+  --border-light: #E5E7EB;
+  --border-sidebar: #334155;
+  --border-sidebar-inner: #374151;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --bg-sidebar-active: rgba(255, 255, 255, 0.10);
+  --bg-sidebar-avatar: #334155;
+}
+
+[data-tema="adultos-noche"] {
+  --color-primary: #60A5FA;
+  --color-secondary: #1E3A5F;
+  --font-size-base: 18px;
+  --bg-page: #0F172A;
+  --bg-surface: #1E293B;
+  --bg-header: #1E293B;
+  --bg-sidebar: #020617;
+  --text-body: #F1F5F9;
+  --text-muted: #A0AEC0;    /* AA 7.4:1 sobre bg-page */
+  --text-sidebar: #94A3B8;
+  --text-sidebar-active: #FFFFFF;
+  --text-sidebar-heading: #6CB4EE;
+  --border-light: #334155;
+  --border-sidebar: #1E293B;
+  --border-sidebar-inner: #1E293B;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.04);
+  --bg-sidebar-active: rgba(255, 255, 255, 0.08);
+  --bg-sidebar-avatar: #1E293B;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   JÓVENES — Vibrante, moderno, creativo
+   ══════════════════════════════════════════════════════════════ */
+[data-tema="jovenes-dia"] {
+  --color-primary: #554DD6;  /* AA 4.6:1 sobre blanco (antes #6C63FF = 4.3:1 ❌) */
+  --color-secondary: #E8E7FF;
+  --font-size-base: 16px;
+  --bg-page: #F5F3FF;
+  --bg-surface: #FFFFFF;
+  --bg-header: #FFFFFF;
+  --bg-sidebar: #2D2B55;
+  --text-body: #1F2937;
+  --text-muted: #615E85;    /* AA 4.5:1 sobre blanco (antes #7C7AA6 = 3.5:1 ❌) */
+  --text-sidebar: #B0AED6;
+  --text-sidebar-active: #FFFFFF;
+  --text-sidebar-heading: #FFFFFF;
+  --border-light: #E0DFF5;
+  --border-sidebar: #3D3B6B;
+  --border-sidebar-inner: #4A4880;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --bg-sidebar-active: rgba(108, 99, 255, 0.20);
+  --bg-sidebar-avatar: #3D3B6B;
+}
+
+[data-tema="jovenes-noche"] {
+  --color-primary: #8B83FF;
+  --color-secondary: #2D2B55;
+  --font-size-base: 16px;
+  --bg-page: #1A1735;
+  --bg-surface: #2D2B55;
+  --bg-header: #2D2B55;
+  --bg-sidebar: #100E26;
+  --text-body: #E0DFF5;
+  --text-muted: #A5A0C8;    /* AA 5.6:1 sobre bg-surface (antes #7C7AA6 = 3.2:1 ❌) */
+  --text-sidebar: #A5A0C8;
+  --text-sidebar-active: #FFFFFF;
+  --text-sidebar-heading: #A5A0FF;
+  --border-light: #3D3B6B;
+  --border-sidebar: #2D2B55;
+  --border-sidebar-inner: #3D3B6B;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.05);
+  --bg-sidebar-active: rgba(108, 99, 255, 0.25);
+  --bg-sidebar-avatar: #3D3B6B;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   NIÑOS — Cálido, divertido, amigable
+   ══════════════════════════════════════════════════════════════ */
+[data-tema="ninos-dia"] {
+  --color-primary: #D1453A;  /* AA 4.5:1 sobre blanco (antes #FF6F61 = 2.7:1 ❌❌) */
+  --color-secondary: #FFE5D9;
+  --font-size-base: 14px;
+  --bg-page: #FFF5F3;
+  --bg-surface: #FFFFFF;
+  --bg-header: #FFFFFF;
+  --bg-sidebar: #A8362D;    /* AA 4.9:1 con --text-sidebar */
+  --text-body: #1F2937;
+  --text-muted: #8C6B63;    /* AA 4.7:1 sobre blanco (antes #B08982 = 2.95:1 ❌❌) */
+  --text-sidebar: #FFD5CC;
+  --text-sidebar-active: #FFFFFF;
+  --text-sidebar-heading: #FFFFFF;
+  --border-light: #FFE0DA;
+  --border-sidebar: #962D24;
+  --border-sidebar-inner: #8A2820;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.12);
+  --bg-sidebar-active: rgba(255, 255, 255, 0.20);
+  --bg-sidebar-avatar: #962D24;
+}
+
+[data-tema="ninos-noche"] {
+  --color-primary: #FF8A7A;
+  --color-secondary: #5C2018;
+  --font-size-base: 14px;
+  --bg-page: #2D1512;
+  --bg-surface: #3D201C;
+  --bg-header: #3D201C;
+  --bg-sidebar: #1A0C0A;
+  --text-body: #FEE2E2;
+  --text-muted: #C4A69E;    /* AA 7.1:1 sobre bg-surface (antes #B08982 = 4.1:1 ❌) */
+  --text-sidebar: #C4A69E;
+  --text-sidebar-active: #FFFFFF;
+  --text-sidebar-heading: #FF8A7A;
+  --border-light: #5C2018;
+  --border-sidebar: #3D201C;
+  --border-sidebar-inner: #5C2018;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --bg-sidebar-active: rgba(255, 143, 128, 0.20);
+  --bg-sidebar-avatar: #3D201C;
+}

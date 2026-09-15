@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Inscripcion extends Model
+{
+    use HasFactory;
+    protected $table = 'inscripcion';
+
+    protected $fillable = [
+        'alumno_id',
+        'grupo_id',
+        'fecha',
+        'fecha_inicio_clases',
+        'fecha_pausa',
+        'fecha_retorno',
+        'fecha_vencimiento',
+        'monto_mensual',
+        'estado',
+        'observaciones',
+    ];
+
+    protected $casts = [
+        'fecha'              => 'date',
+        'fecha_inicio_clases'=> 'date',
+        'fecha_pausa'        => 'date',
+        'fecha_retorno'      => 'date',
+        'fecha_vencimiento'  => 'date',
+        'monto_mensual'      => 'decimal:2',
+    ];
+
+    public function alumno(): BelongsTo
+    {
+        return $this->belongsTo(Alumno::class, 'alumno_id');
+    }
+
+    public function grupo(): BelongsTo
+    {
+        return $this->belongsTo(Grupo::class, 'grupo_id');
+    }
+
+    public function mensualidades(): HasMany
+    {
+        return $this->hasMany(Mensualidad::class, 'inscripcion_id');
+    }
+}

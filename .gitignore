@@ -1,0 +1,82 @@
+# =========================
+# Laravel
+# =========================
+
+/vendor/
+.env
+.env.*
+!.env.example
+
+/storage/*.key
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+
+/bootstrap/cache/*.php
+
+
+# =========================
+# Node / Vue / Vite
+# =========================
+
+/node_modules/
+/public/build/
+/public/hot
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# =========================
+# IDE / Editor
+# =========================
+
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+
+# =========================
+# Sistema operativo
+# =========================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# =========================
+# Testing / coverage
+# =========================
+
+.phpunit.result.cache
+.phpunit.cache/
+coverage/
+
+
+# =========================
+# Logs
+# =========================
+
+*.log
+
+
+# =========================
+# Composer
+# =========================
+
+composer.phar
+
+
+# =========================
+# Archivos temporales
+# =========================
+
+*.tmp
+*.temp
+*.swp
+*.bak
