@@ -16,9 +16,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
-        $middleware->validateCsrfTokens(except: [
-            '/webhooks/pagofacil/callback',
-        ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'bitacora' => \App\Http\Middleware\BitacoraMiddleware::class,

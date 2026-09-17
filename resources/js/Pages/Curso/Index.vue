@@ -53,7 +53,6 @@
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Descripción</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Tipo de Enseñanza</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Duración Estándar</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Precio (Bs)</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Estado</th>
               <th v-if="canEdit || canDelete" class="px-4 py-3 text-left font-semibold text-gray-600">Acciones</th>
             </tr>
@@ -64,7 +63,6 @@
               <td class="px-4 py-3 text-gray-600 truncate max-w-xs">{{ curso.descripcion ?? '-' }}</td>
               <td class="px-4 py-3 text-gray-600">{{ curso.tipo_ensenanza ?? '-' }}</td>
               <td class="px-4 py-3 text-gray-600">{{ curso.duracion_estandar ?? '-' }}</td>
-              <td class="px-4 py-3 text-gray-600 font-semibold">{{ Number(curso.precio).toFixed(2) }} Bs</td>
               <td class="px-4 py-3">
                 <span
                   class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold"
@@ -95,7 +93,7 @@
               </td>
             </tr>
             <tr v-if="cursos.data.length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+              <td colspan="6" class="px-4 py-8 text-center text-gray-400">
                 No se encontraron cursos.
               </td>
             </tr>

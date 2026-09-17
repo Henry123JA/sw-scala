@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Exceptions\BusinessException;
 use App\Models\Inscripcion;
 use App\Models\Grupo;
-use App\Models\Mensualidad;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -13,18 +12,20 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 class InscripcionService
 {
     /**
-     * List enrollments with search.
+     * List enrollments with search and filters.
      */
     public function listar(string $buscar = '', ?string $estado = null, ?int $alumnoId = null, ?int $docenteId = null): LengthAwarePaginator
     {
         return Inscripcion::query()
-            ->with(['alumno.usuario', 'grupo.curso', 'grupo.docente.usuario', 'mensualidades'])
+            ->with(['alumno.usuario', 'grupo.curso', 'grupo.docente.usuario'])
             ->when($buscar, function ($query) use ($buscar) {
-                $query->whereHas('alumno.usuario', function ($q) use ($buscar) {
-                    $q->where('nombres', 'like', "%{$buscar}%")
-                      ->orWhere('apellidos', 'like', "%{$buscar}%");
-                })->orWhereHas('grupo.curso', function ($q) use ($buscar) {
-                    $q->where('nombre', 'like', "%{$buscar}%");
+                $query->where(function ($sub) use ($buscar) {
+                    $sub->whereHas('alumno.usuario', function ($q) use ($buscar) {
+                        $q->where('nombres', 'like', "%{$buscar}%")
+                          ->orWhere('apellidos', 'like', "%{$buscar}%");
+                    })->orWhereHas('grupo.curso', function ($q) use ($buscar) {
+                        $q->where('nombre', 'like', "%{$buscar}%");
+                    });
                 });
             })
             ->when($estado, function ($query) use ($estado) {
@@ -47,54 +48,47 @@ class InscripcionService
      */
     public function obtenerPorId(int $id): Inscripcion
     {
-        return Inscripcion::with(['alumno.usuario', 'grupo.curso', 'grupo.docente.usuario', 'mensualidades'])->findOrFail($id);
+        return Inscripcion::with(['alumno.usuario', 'grupo.curso', 'grupo.docente.usuario'])->findOrFail($id);
     }
 
     /**
      * Create enrollment.
-     * fecha_vencimiento = fecha_inicio_clases
-     * No genera mensualidades por defecto.
+     * Solo considera ocupantes a inscripciones ACTIVA y PAUSADA.
      */
     public function crear(array $data): Inscripcion
     {
         return DB::transaction(function () use ($data) {
             $grupo = Grupo::findOrFail($data['grupo_id']);
 
-            // 1. Group capacity check
+            // 1. Capacidad del grupo: ocupantes únicamente ACTIVA y PAUSADA
             $activeCount = Inscripcion::where('grupo_id', $grupo->id)
-                ->whereIn('estado', ['ACTIVA', 'PAUSADA', 'VENCIDA'])
+                ->whereIn('estado', ['ACTIVA', 'PAUSADA'])
                 ->count();
 
             if ($activeCount >= $grupo->capacidad_maxima) {
                 throw new BusinessException('El grupo ha alcanzado su capacidad máxima.', 'grupo_id');
             }
 
-            // 2. Unique enrollment check
+            // 2. Prevención de duplicados: únicamente si ya tiene inscripción ACTIVA o PAUSADA
             $exists = Inscripcion::where('grupo_id', $grupo->id)
                 ->where('alumno_id', $data['alumno_id'])
-                ->whereIn('estado', ['ACTIVA', 'PAUSADA', 'VENCIDA'])
+                ->whereIn('estado', ['ACTIVA', 'PAUSADA'])
                 ->exists();
 
             if ($exists) {
-                throw new BusinessException('El alumno ya tiene una inscripción activa, vencida o pausada en este grupo.', 'alumno_id');
+                throw new BusinessException('El alumno ya tiene una inscripción activa o pausada en este grupo.', 'alumno_id');
             }
 
-            $montoMensual = $grupo->curso->precio;
             $fechaInicio = $data['fecha_inicio_clases'];
 
-            // 3. Create Inscripcion — vencimiento = fecha de inicio
-            $inscripcion = Inscripcion::create([
+            return Inscripcion::create([
                 'alumno_id'           => $data['alumno_id'],
                 'grupo_id'            => $data['grupo_id'],
                 'fecha'               => $data['fecha'] ?? now()->toDateString(),
                 'fecha_inicio_clases' => $fechaInicio,
-                'fecha_vencimiento'   => $fechaInicio,
-                'monto_mensual'       => $montoMensual,
                 'estado'              => 'ACTIVA',
                 'observaciones'       => $data['observaciones'] ?? null,
             ]);
-
-            return $inscripcion;
         });
     }
 
@@ -114,17 +108,15 @@ class InscripcionService
     }
 
     /**
-     * Pause enrollment.
-     * Solo registra fechas. Los días de pausa se agregan al vencimiento al reanudar.
+     * Pause enrollment (suspensión académica temporal).
      */
     public function pausar(int $id, array $data): Inscripcion
     {
         return DB::transaction(function () use ($id, $data) {
             $inscripcion = Inscripcion::findOrFail($id);
 
-            $estadosValidos = ['ACTIVA', 'VENCIDA'];
-            if (!in_array($inscripcion->estado, $estadosValidos)) {
-                throw new BusinessException('Solo se pueden pausar inscripciones activas o vencidas.', 'estado');
+            if ($inscripcion->estado !== 'ACTIVA') {
+                throw new BusinessException('Solo se pueden pausar inscripciones activas.', 'estado');
             }
 
             $fechaPausa = $data['fecha_pausa'] ?? now()->toDateString();
@@ -134,17 +126,12 @@ class InscripcionService
                 'fecha_pausa' => $fechaPausa,
             ]);
 
-            // Ya no anulamos mensualidades — porque no hay mensualidades pre-generadas.
-            // Solo guardamos la fecha de pausa para calcular la extensión al reanudar.
-
             return $inscripcion->fresh();
         });
     }
 
     /**
-     * Resume enrollment.
-     * Extiende fecha_vencimiento por los días entre pausa y retorno.
-     * Luego determina el estado según si la nueva fecha de vencimiento es futura o pasada.
+     * Resume enrollment (reactivación académica).
      */
     public function reanudar(int $id, array $data): Inscripcion
     {
@@ -155,23 +142,11 @@ class InscripcionService
                 throw new BusinessException('Solo se pueden reanudar inscripciones pausadas.', 'estado');
             }
 
-            $fechaRetorno = Carbon::parse($data['fecha_retorno'] ?? now()->toDateString());
-            $fechaPausa = Carbon::parse($inscripcion->fecha_pausa);
-
-            // Días entre pausa y retorno
-            $diasPausa = $fechaPausa->diffInDays($fechaRetorno);
-
-            // Extender fecha_vencimiento por los días de pausa
-            $nuevaFechaVencimiento = Carbon::parse($inscripcion->fecha_vencimiento)->addDays($diasPausa);
-
-            // Determinar estado
-            $hoy = Carbon::today();
-            $nuevoEstado = $nuevaFechaVencimiento->greaterThanOrEqualTo($hoy) ? 'ACTIVA' : 'VENCIDA';
+            $fechaRetorno = $data['fecha_retorno'] ?? now()->toDateString();
 
             $inscripcion->update([
-                'estado'            => $nuevoEstado,
-                'fecha_retorno'     => $fechaRetorno->toDateString(),
-                'fecha_vencimiento' => $nuevaFechaVencimiento->toDateString(),
+                'estado'        => 'ACTIVA',
+                'fecha_retorno' => $fechaRetorno,
             ]);
 
             return $inscripcion->fresh();
@@ -179,33 +154,32 @@ class InscripcionService
     }
 
     /**
-     * Extender fecha_vencimiento al realizar un pago.
+     * Cancel / withdraw enrollment.
+     * Registra fecha_retiro, cambia a CANCELADA y preserva el registro en el historial.
      */
-    public function extenderVencimiento(Inscripcion $inscripcion, int $mesesPagados): Inscripcion
+    public function cancelar(int $id, array $data = []): Inscripcion
     {
-        $vencimientoActual = Carbon::parse($inscripcion->fecha_vencimiento);
-        $nuevaFecha = $vencimientoActual->addMonths($mesesPagados);
+        return DB::transaction(function () use ($id, $data) {
+            $inscripcion = Inscripcion::findOrFail($id);
 
-        $hoy = Carbon::today();
-        $nuevoEstado = $nuevaFecha->greaterThanOrEqualTo($hoy) ? 'ACTIVA' : 'VENCIDA';
+            if ($inscripcion->estado === 'CANCELADA') {
+                throw new BusinessException('La inscripción ya se encuentra cancelada.', 'estado');
+            }
 
-        $inscripcion->update([
-            'fecha_vencimiento' => $nuevaFecha->toDateString(),
-            'estado'            => $nuevoEstado,
-        ]);
+            $inscripcion->update([
+                'estado'       => 'CANCELADA',
+                'fecha_retiro' => $data['fecha_retiro'] ?? now()->toDateString(),
+            ]);
 
-        return $inscripcion;
+            return $inscripcion->fresh();
+        });
     }
 
     /**
-     * Delete enrollment.
+     * Delete enrollment adapter — conserva el registro como historial realizando retiro lógico.
      */
     public function eliminar(int $id): void
     {
-        DB::transaction(function () use ($id) {
-            $inscripcion = Inscripcion::findOrFail($id);
-            Mensualidad::where('inscripcion_id', $inscripcion->id)->delete();
-            $inscripcion->delete();
-        });
+        $this->cancelar($id, ['fecha_retiro' => now()->toDateString()]);
     }
 }

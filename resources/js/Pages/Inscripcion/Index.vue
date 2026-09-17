@@ -30,6 +30,7 @@
           <option value="">Todos los estados</option>
           <option value="ACTIVA">Activa</option>
           <option value="PAUSADA">Pausada</option>
+          <option value="CANCELADA">Cancelada</option>
         </select>
       </div>
 
@@ -50,7 +51,6 @@
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Grupo / Curso</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Fecha Inscripción</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Inicio de Clases</th>
-              <th class="px-4 py-3 text-left font-semibold text-gray-600">Monto Mensual</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Estado</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Acciones</th>
             </tr>
@@ -70,19 +70,23 @@
               <td class="px-4 py-3 text-gray-600">
                 {{ ins.fecha_inicio_clases ? new Date(ins.fecha_inicio_clases).toLocaleDateString('es-ES') : '-' }}
               </td>
-              <td class="px-4 py-3 text-gray-600 font-semibold">
-                {{ Number(ins.monto_mensual).toFixed(2) }} Bs
-              </td>
               <td class="px-4 py-3">
                 <span
                   class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold"
-                  :class="ins.estado === 'ACTIVA' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'"
+                  :class="{
+                    'bg-green-100 text-green-700': ins.estado === 'ACTIVA',
+                    'bg-yellow-100 text-yellow-700': ins.estado === 'PAUSADA',
+                    'bg-red-100 text-red-700': ins.estado === 'CANCELADA'
+                  }"
                 >
                   {{ ins.estado }}
                 </span>
+                <span v-if="ins.estado === 'CANCELADA' && ins.fecha_retiro" class="block text-xs text-gray-400">
+                  Retiro: {{ new Date(ins.fecha_retiro).toLocaleDateString('es-ES') }}
+                </span>
               </td>
-              <td v-if="canEdit" class="px-4 py-3">
-                <div class="flex items-center">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-1">
                   <Link
                     :href="buildUrl(`/inscripciones/${ins.id}`)"
                     class="rounded px-2 py-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 cursor-pointer"
@@ -91,7 +95,7 @@
                     <component :is="Lucide.Eye" class="w-4 h-4 shrink-0" />
                   </Link>
                   <Link
-                    v-if="canEdit"
+                    v-if="canEdit && ins.estado !== 'CANCELADA'"
                     :href="buildUrl(`/inscripciones/${ins.id}/editar`)"
                     class="rounded px-2 py-1 text-xs bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border border-yellow-200 cursor-pointer"
                     title="Editar"
@@ -99,18 +103,18 @@
                     <component :is="Lucide.Pencil" class="w-4 h-4 shrink-0" />
                   </Link>
                   <button
-                    v-if="canDelete"
-                    @click="confirmarEliminar(ins)"
+                    v-if="canEdit && ins.estado !== 'CANCELADA'"
+                    @click="confirmarCancelar(ins)"
                     class="rounded px-2 py-1 text-xs bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 cursor-pointer"
-                    title="Eliminar"
+                    title="Cancelar inscripción (Retiro)"
                   >
-                    <component :is="Lucide.Trash2" class="w-4 h-4 shrink-0" />
+                    <component :is="Lucide.UserX" class="w-4 h-4 shrink-0" />
                   </button>
                 </div>
               </td>
             </tr>
             <tr v-if="inscripciones.data.length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+              <td colspan="6" class="px-4 py-8 text-center text-gray-400">
                 No se encontraron inscripciones.
               </td>
             </tr>
@@ -187,10 +191,10 @@ function onSearch() {
   }, 300);
 }
 
-function confirmarEliminar(ins) {
+function confirmarCancelar(ins) {
   const nombre = ins.alumno?.usuario ? `${ins.alumno.usuario.nombres} ${ins.alumno.usuario.apellidos}` : 'Inscripción';
-  if (confirm(`¿Está seguro de eliminar la inscripción de "${nombre}" en el grupo "${ins.grupo?.codigo_grupo}"?`)) {
-    router.delete(buildUrl(`/inscripciones/${ins.id}`));
+  if (confirm(`¿Está seguro de retirar/cancelar la inscripción de "${nombre}" en el grupo "${ins.grupo?.codigo_grupo}"?\n\nEl estado cambiará a CANCELADA, se registrará la fecha de retiro y se conservará el registro como historial académico.`)) {
+    router.post(buildUrl(`/inscripciones/${ins.id}/cancelar`));
   }
 }
 </script>

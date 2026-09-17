@@ -108,7 +108,6 @@ class UsuarioService
                 'fecha_nacimiento'    => $data['fecha_nacimiento'] ?? null,
                 'fecha_incorporacion' => $data['fecha_incorporacion'] ?? null,
                 'telefono'            => $data['telefono'] ?? null,
-                'tarifa_horaria'      => $data['tarifa_horaria'] ?? null,
                 'observaciones'       => $data['observaciones'] ?? null,
             ]);
 

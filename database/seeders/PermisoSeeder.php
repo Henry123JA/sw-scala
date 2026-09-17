@@ -46,23 +46,19 @@ class PermisoSeeder extends Seeder
             ['nombre' => 'Editar Inscripciones', 'slug' => 'inscripciones.edit'],
             ['nombre' => 'Eliminar Inscripciones', 'slug' => 'inscripciones.delete'],
 
-            // Mensualidades
-            ['nombre' => 'Ver Mensualidades', 'slug' => 'mensualidades.index'],
-            ['nombre' => 'Crear Mensualidades', 'slug' => 'mensualidades.create'],
-            ['nombre' => 'Editar Mensualidades', 'slug' => 'mensualidades.edit'],
-            ['nombre' => 'Eliminar Mensualidades', 'slug' => 'mensualidades.delete'],
-
-            // Seguimiento
-            ['nombre' => 'Ver Seguimiento', 'slug' => 'seguimiento.index'],
-
             // Reportes
             ['nombre' => 'Ver Reportes', 'slug' => 'reportes.index'],
-            ['nombre' => 'Ver Reportes de Negocio', 'slug' => 'reportes.negocio'],
             ['nombre' => 'Ver Reportes de Acceso', 'slug' => 'reportes.acceso'],
 
             // Bitácora
             ['nombre' => 'Ver Bitácora', 'slug' => 'bitacora.index'],
         ];
+
+        // Soft delete obsolete permissions
+        Permiso::whereIn('slug', [
+            'mensualidades.index', 'mensualidades.create', 'mensualidades.edit', 'mensualidades.delete',
+            'seguimiento.index', 'reportes.negocio'
+        ])->update(['eliminado' => true]);
 
         foreach ($permisos as $permiso) {
             Permiso::updateOrCreate(

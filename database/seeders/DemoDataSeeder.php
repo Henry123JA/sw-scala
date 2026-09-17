@@ -17,8 +17,6 @@ use App\Models\Grupo;
 use App\Models\HorarioDocente;
 use App\Models\HorarioGrupo;
 use App\Models\Inscripcion;
-use App\Models\Mensualidad;
-use App\Models\MetodoPago;
 use Carbon\Carbon;
 
 /**
@@ -44,7 +42,6 @@ class DemoDataSeeder extends Seeder
         $rolSecretaria  = Rol::where('nombre', 'Secretaria')->first();
         $temaDefault    = Tema::where('nombre', 'adultos')->first();
 
-        $efectivo = MetodoPago::where('nombre', 'Efectivo')->first();
 
         // ─────────────────────────────────────────────────────────────
         // 1. SECRETARIA
@@ -76,7 +73,6 @@ class DemoDataSeeder extends Seeder
                 'fecha_nacimiento'  => '1985-03-15',
                 'fecha_incorporacion' => '2020-01-10',
                 'telefono'          => '70123456',
-                'tarifa_horaria'    => 80.00,
                 'especialidades'    => ['Piano', 'Violín'],
                 'observaciones'     => 'Graduado del Conservatorio Nacional de Bolivia.',
                 'horarios'          => [
@@ -94,7 +90,6 @@ class DemoDataSeeder extends Seeder
                 'fecha_nacimiento'  => '1990-07-22',
                 'fecha_incorporacion' => '2021-03-01',
                 'telefono'          => '71234567',
-                'tarifa_horaria'    => 75.00,
                 'especialidades'    => ['Canto', 'Piano'],
                 'observaciones'     => 'Especialista en técnica vocal y canto lírico.',
                 'horarios'          => [
@@ -112,7 +107,6 @@ class DemoDataSeeder extends Seeder
                 'fecha_nacimiento'  => '1982-11-08',
                 'fecha_incorporacion' => '2019-08-15',
                 'telefono'          => '72345678',
-                'tarifa_horaria'    => 90.00,
                 'especialidades'    => ['Guitarra'],
                 'observaciones'     => 'Guitarrista clásico y popular con 15 años de experiencia.',
                 'horarios'          => [
@@ -130,7 +124,6 @@ class DemoDataSeeder extends Seeder
                 'fecha_nacimiento'  => '1993-05-30',
                 'fecha_incorporacion' => '2022-02-01',
                 'telefono'          => '73456789',
-                'tarifa_horaria'    => 70.00,
                 'especialidades'    => ['Flauta', 'Violín'],
                 'observaciones'     => 'Flautista con formación en música andina y clásica.',
                 'horarios'          => [
@@ -148,7 +141,6 @@ class DemoDataSeeder extends Seeder
                 'fecha_nacimiento'  => '1988-09-14',
                 'fecha_incorporacion' => '2020-09-01',
                 'telefono'          => '74567890',
-                'tarifa_horaria'    => 85.00,
                 'especialidades'    => ['Batería'],
                 'observaciones'     => 'Percusionista con experiencia en rock, jazz y música latina.',
                 'horarios'          => [
@@ -183,7 +175,6 @@ class DemoDataSeeder extends Seeder
                     'fecha_nacimiento'   => $data['fecha_nacimiento'],
                     'fecha_incorporacion'=> $data['fecha_incorporacion'],
                     'telefono'           => $data['telefono'],
-                    'tarifa_horaria'     => $data['tarifa_horaria'],
                     'observaciones'      => $data['observaciones'],
                 ]
             );
@@ -247,42 +238,36 @@ class DemoDataSeeder extends Seeder
                 'descripcion'      => 'Curso introductorio de piano. Lectura musical, escalas y repertorio básico.',
                 'tipo_ensenanza'   => 'individual',
                 'duracion_estandar'=> 12,
-                'precio'           => 350.00,
             ],
             [
                 'nombre'           => 'Piano Intermedio',
                 'descripcion'      => 'Técnica avanzada, armonía, interpretación de obras clásicas y populares.',
                 'tipo_ensenanza'   => 'individual',
                 'duracion_estandar'=> 12,
-                'precio'           => 400.00,
             ],
             [
                 'nombre'           => 'Guitarra Acústica',
                 'descripcion'      => 'Rasgueos, acordes, fingerpicking y repertorio popular boliviano e internacional.',
                 'tipo_ensenanza'   => 'grupal',
                 'duracion_estandar'=> 10,
-                'precio'           => 280.00,
             ],
             [
                 'nombre'           => 'Violín Inicial',
                 'descripcion'      => 'Postura, arco, afinación y piezas del repertorio clásico para principiantes.',
                 'tipo_ensenanza'   => 'individual',
                 'duracion_estandar'=> 12,
-                'precio'           => 380.00,
             ],
             [
                 'nombre'           => 'Batería y Percusión',
                 'descripcion'      => 'Rudimentos, coordinación, ritmos de cumbia, rock, jazz y salsa.',
                 'tipo_ensenanza'   => 'individual',
                 'duracion_estandar'=> 10,
-                'precio'           => 320.00,
             ],
             [
                 'nombre'           => 'Técnica Vocal',
                 'descripcion'      => 'Respiración, resonancia, impostación y repertorio lírico y popular.',
                 'tipo_ensenanza'   => 'individual',
                 'duracion_estandar'=> 12,
-                'precio'           => 360.00,
             ],
         ];
 
@@ -569,99 +554,51 @@ class DemoDataSeeder extends Seeder
         }
 
         // ─────────────────────────────────────────────────────────────
-        // 7. INSCRIPCIONES y MENSUALIDADES — NUEVO MODELO
-        //    - Un registro de pago por cada pago real (con meses_pagados)
-        //    - fecha_vencimiento en inscripción se extiende al pagar
-        //    - Estados: ACTIVA (al día), VENCIDA (debe), PAUSADA
+        // 7. INSCRIPCIONES — CICLO 1 ACADÉMICO
+        //    - Estados válidos: ACTIVA, PAUSADA, CANCELADA
+        //    - CANCELADA conserva registro como historial con fecha_retiro
         // ─────────────────────────────────────────────────────────────
-        $hoy = Carbon::today();
-
         $inscripcionesMap = [
-            // [alumno_codigo, grupo_codigo, fecha_inicio, meses_pagados, pausada?]
-            // --- ACTIVAS (fecha_vencimiento > hoy) ---
-           // --- ACTIVAS (vigentes cerca de hoy) ---
-            ['ALU-001', 'GRP-PIA-01', '2026-03-01', 7],      // Vigente hasta aprox. 01/10/2026
-            ['ALU-002', 'GRP-GIT-01', '2026-04-01', 6],      // Vigente hasta aprox. 01/10/2026
-            ['ALU-003', 'GRP-PIA-02', '2026-05-01', 5],      // Vigente hasta aprox. 01/10/2026
-            ['ALU-005', 'GRP-CAN-01', '2026-06-01', 4],      // Vigente hasta aprox. 01/10/2026
-            ['ALU-010', 'GRP-GIT-01', '2026-06-15', 3],      // Vigente hasta aprox. 15/09/2026
-            // --- VENCIDAS (vencieron recientemente) ---
-            ['ALU-004', 'GRP-GIT-02', '2026-03-01', 6],      // Venció aprox. 01/09/2026
-            ['ALU-006', 'GRP-PIA-01', '2026-02-15', 7],      // Venció aprox. 15/09/2026
-            ['ALU-007', 'GRP-VIO-01', '2026-04-01', 5],      // Venció aprox. 01/09/2026
-            ['ALU-008', 'GRP-BAT-01', '2026-05-01', 4],      // Venció aprox. 01/09/2026
-            ['ALU-009', 'GRP-CAN-01', '2026-01-15', 8],      // Venció aprox. 15/09/2026
+            // [alumno_codigo, grupo_codigo, fecha_inicio, estado, fecha_pausa, fecha_retorno, fecha_retiro]
+            ['ALU-001', 'GRP-PIA-01', '2026-03-01', 'ACTIVA', null, null, null],
+            ['ALU-002', 'GRP-GIT-01', '2026-04-01', 'ACTIVA', null, null, null],
+            ['ALU-003', 'GRP-PIA-02', '2026-05-01', 'ACTIVA', null, null, null],
+            ['ALU-005', 'GRP-CAN-01', '2026-06-01', 'ACTIVA', null, null, null],
+            ['ALU-010', 'GRP-GIT-01', '2026-06-15', 'ACTIVA', null, null, null],
 
-            // --- PAUSADAS ---
-            ['ALU-004', 'GRP-VIO-01', '2026-05-01', 3, true], // Pausada recientemente
+            // PAUSADAS (pausadas temporalmente por razones académicas)
+            ['ALU-004', 'GRP-VIO-01', '2026-05-01', 'PAUSADA', '2026-07-01', null, null],
+            ['ALU-006', 'GRP-PIA-01', '2026-02-15', 'PAUSADA', '2026-08-01', null, null],
 
-            // --- Alumno en dos grupos ---
-            ['ALU-003', 'GRP-GIT-02', '2026-05-15', 4],      // Vigente hasta aprox. 15/09/2026
+            // CANCELADAS (retiradas académicamente, conservadas como historial)
+            ['ALU-004', 'GRP-GIT-02', '2026-03-01', 'CANCELADA', null, null, '2026-08-15'],
+            ['ALU-007', 'GRP-VIO-01', '2026-04-01', 'CANCELADA', null, null, '2026-08-20'],
+            ['ALU-008', 'GRP-BAT-01', '2026-05-01', 'CANCELADA', null, null, '2026-09-01'],
+            ['ALU-009', 'GRP-CAN-01', '2026-01-15', 'CANCELADA', null, null, '2026-07-30'],
+
+            // Alumno en dos grupos
+            ['ALU-003', 'GRP-GIT-02', '2026-05-15', 'ACTIVA', null, null, null],
         ];
 
         foreach ($inscripcionesMap as $entry) {
-            [$aluCod, $grpCod, $fechaInicioStr, $mesesPagados] = $entry;
-            $pausada = $entry[4] ?? false;
+            [$aluCod, $grpCod, $fechaInicioStr, $estado, $fechaPausaStr, $fechaRetornoStr, $fechaRetiroStr] = $entry;
 
             $alumno = $alumnos[$aluCod];
             $grupo  = $grupos[$grpCod];
-            $curso  = Curso::find($grupo->curso_id);
-            $montoMensual  = $curso->precio ?? 350.00;
-            $fechaInicio   = Carbon::parse($fechaInicioStr);
+            $fechaInicio = Carbon::parse($fechaInicioStr);
 
-            // vencimiento = fecha_inicio + meses_pagados
-            $fechaVencimiento = $fechaInicio->copy()->addMonths($mesesPagados);
-
-            // Determinar estado real según fecha_vencimiento vs hoy
-            if ($pausada) {
-                $estado = 'PAUSADA';
-                $fechaPausa = $fechaInicio->copy()->addMonths($mesesPagados - 1);
-                $fechaRetorno = null;
-            } elseif ($fechaVencimiento->lessThan($hoy)) {
-                $estado = 'VENCIDA';
-                $fechaPausa = null;
-                $fechaRetorno = null;
-            } else {
-                $estado = 'ACTIVA';
-                $fechaPausa = null;
-                $fechaRetorno = null;
-            }
-
-            $inscripcion = Inscripcion::firstOrCreate(
+            Inscripcion::updateOrCreate(
                 ['alumno_id' => $alumno->id, 'grupo_id' => $grupo->id],
                 [
-                    'fecha'              => $fechaInicio,
+                    'fecha'               => $fechaInicio,
                     'fecha_inicio_clases' => $fechaInicio,
-                    'fecha_vencimiento'  => $fechaVencimiento,
-                    'fecha_pausa'        => $fechaPausa,
-                    'fecha_retorno'      => $fechaRetorno,
-                    'monto_mensual'      => $montoMensual,
-                    'estado'             => $estado,
-                    'observaciones'      => null,
+                    'fecha_pausa'         => $fechaPausaStr ? Carbon::parse($fechaPausaStr) : null,
+                    'fecha_retorno'       => $fechaRetornoStr ? Carbon::parse($fechaRetornoStr) : null,
+                    'fecha_retiro'        => $fechaRetiroStr ? Carbon::parse($fechaRetiroStr) : null,
+                    'estado'              => $estado,
+                    'observaciones'       => null,
                 ]
             );
-
-            // Crear UN solo registro de pago por los meses pagados
-            if ($mesesPagados > 0) {
-                $recibo = sprintf('REC-%04d', $inscripcion->id * 100 + $mesesPagados);
-                $fechaPago = $fechaInicio->copy()->addDays(rand(1, 5));
-
-                Mensualidad::firstOrCreate(
-                    [
-                        'inscripcion_id' => $inscripcion->id,
-                        'numero_recibo'  => $recibo,
-                    ],
-                    [
-                        'metodo_pago_id'  => $efectivo?->id,
-                        'numero_mes'      => 1,
-                        'meses_pagados'   => $mesesPagados,
-                        'monto_base'      => $montoMensual * $mesesPagados,
-                        'fecha_pago'      => $fechaPago,
-                        'estado'          => 'PAGADO',
-                        'tipo_comprobante'=> 'EFECTIVO',
-                    ]
-                );
-            }
         }
     }
 }

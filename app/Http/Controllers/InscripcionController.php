@@ -106,8 +106,22 @@ class InscripcionController extends Controller
     public function destroy(int $id): RedirectResponse
     {
         try {
-            $this->inscripcionService->eliminar($id);
-            return redirect()->route('inscripciones.index')->with('success', 'Inscripción eliminada exitosamente.');
+            $this->inscripcionService->cancelar($id, ['fecha_retiro' => now()->toDateString()]);
+            return redirect()->route('inscripciones.index')->with('success', 'Inscripción retirada/cancelada exitosamente.');
+        } catch (BusinessException $e) {
+            return back()->withErrors([$e->getField() => $e->getMessage()]);
+        }
+    }
+
+    public function cancel(Request $request, int $id): RedirectResponse
+    {
+        $request->validate([
+            'fecha_retiro' => ['nullable', 'date'],
+        ]);
+
+        try {
+            $this->inscripcionService->cancelar($id, $request->only('fecha_retiro'));
+            return back()->with('success', 'Inscripción retirada/cancelada exitosamente.');
         } catch (BusinessException $e) {
             return back()->withErrors([$e->getField() => $e->getMessage()]);
         }

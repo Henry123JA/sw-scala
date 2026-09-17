@@ -20,10 +20,7 @@ class RolMenuSeeder extends Seeder
                 '/grupos',
                 '/horarios',
                 '/inscripciones',
-                '/mensualidades',
-                '/seguimiento',
                 '/reportes',
-                '/reportes/negocio',
                 '/reportes/acceso',
                 '/bitacora',
             ],
@@ -33,8 +30,6 @@ class RolMenuSeeder extends Seeder
                 '/grupos',
                 '/horarios',
                 '/inscripciones',
-                '/mensualidades',
-                '/seguimiento',
             ],
             'Docente' => [
                 '/grupos',
@@ -42,8 +37,6 @@ class RolMenuSeeder extends Seeder
             ],
             'Alumno' => [
                 '/inscripciones',
-                '/mensualidades',
-                '/seguimiento',
             ],
         ];
 

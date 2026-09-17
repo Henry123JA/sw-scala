@@ -34,11 +34,6 @@
             <p v-if="form.errors.duracion_estandar" class="mt-1 text-xs text-red-600">{{ form.errors.duracion_estandar }}</p>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Precio (Bs) *</label>
-            <input v-model.number="form.precio" type="number" step="0.01" min="0" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required />
-            <p v-if="form.errors.precio" class="mt-1 text-xs text-red-600">{{ form.errors.precio }}</p>
-          </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700">Estado</label>
@@ -84,7 +79,6 @@ const form = useForm({
   descripcion: '',
   tipo_ensenanza: '',
   duracion_estandar: '',
-  precio: 0.00,
   estado: 'ACTIVO',
 });
 

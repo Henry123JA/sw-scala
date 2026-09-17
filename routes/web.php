@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PerfilController;
-use App\Http\Controllers\SeguimientoController;
 use App\Http\Controllers\TemaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\AulaController;
@@ -110,30 +109,17 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
         Route::delete('/inscripciones/{id}', [InscripcionController::class, 'destroy'])->name('inscripciones.destroy')->whereNumber('id');
         Route::post('/inscripciones/{id}/pausar', [InscripcionController::class, 'pause'])->name('inscripciones.pause')->whereNumber('id');
         Route::post('/inscripciones/{id}/reanudar', [InscripcionController::class, 'resume'])->name('inscripciones.resume')->whereNumber('id');
+        Route::post('/inscripciones/{id}/cancelar', [InscripcionController::class, 'cancel'])->name('inscripciones.cancel')->whereNumber('id');
     });
-    Route::get('/mensualidades', [\App\Http\Controllers\MensualidadController::class, 'index'])->name('mensualidades.index');
-    Route::post('/mensualidades/{id}/pagar-efectivo', [\App\Http\Controllers\MensualidadController::class, 'pagarEfectivo'])->name('mensualidades.pagar-efectivo');
-    Route::post('/mensualidades/{id}/iniciar-pago-qr', [\App\Http\Controllers\MensualidadController::class, 'iniciarPagoQR'])->name('mensualidades.iniciar-pago-qr');
-    Route::get('/api/mensualidades/verificar-qr/{paymentNumber}', [\App\Http\Controllers\MensualidadController::class, 'verificarEstadoQR'])->name('mensualidades.verificar-qr');
 
-    Route::get('/seguimiento', [SeguimientoController::class, 'index'])->name('seguimiento.index');
-    Route::get('/seguimiento/{alumno_id}', [SeguimientoController::class, 'show'])->name('seguimiento.show')->whereNumber('alumno_id');
-    Route::get('/recibos/{id}', [\App\Http\Controllers\ReciboController::class, 'show'])->name('recibos.show')->whereNumber('id');
     Route::middleware(['role:Propietario'])->group(function () {
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
-        Route::get('/reportes/negocio', [ReporteController::class, 'negocio'])->name('reportes.negocio');
         Route::get('/reportes/acceso', [ReporteController::class, 'acceso'])->name('reportes.acceso');
         Route::get('/reportes/acceso/exportar', [ReporteController::class, 'exportarAcceso'])->name('reportes.acceso.export');
-        Route::get('/reportes/negocio/exportar', [ReporteController::class, 'exportarNegocio'])->name('reportes.negocio.export');
-        Route::get('/reportes/negocio/imprimir', [ReporteController::class, 'imprimirNegocio'])->name('reportes.negocio.print');
-        Route::get('/reportes/negocio/detalle', [ReporteController::class, 'detalleNegocio'])->name('reportes.negocio.detalle');
         Route::get('/reportes/acceso/detalle', [ReporteController::class, 'detalleAcceso'])->name('reportes.acceso.detalle');
         Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
     });
 });
-
-Route::post('/webhooks/pagofacil/callback', [\App\Http\Controllers\PagoFacilCallbackController::class, 'handle'])
-    ->middleware('throttle:30,1');
 
 
 require __DIR__.'/auth.php';

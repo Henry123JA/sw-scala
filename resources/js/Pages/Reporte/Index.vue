@@ -7,29 +7,6 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Reporte de Negocio -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col justify-between">
-          <div>
-            <div class="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mb-4">
-              <!-- Dollar/Trending Icon -->
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h2 class="text-lg font-bold text-gray-900 mb-2">Reportes Financieros y de Negocio</h2>
-            <p class="text-gray-500 text-sm mb-4">
-              Visualice los ingresos mensuales, estado de mensualidades (pagadas, pendientes, atrasadas) e inscripciones activas por curso.
-            </p>
-          </div>
-          <Link
-            :href="buildUrl('/reportes/negocio')"
-            class="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 transition w-full"
-            title="Ver Reportes de Negocio"
-          >
-            <component :is="Lucide.Eye" class="w-4 h-4 shrink-0" />
-            Reportes de Negocio
-          </Link>
-        </div>
 
         <!-- Reporte de Acceso (Bitácora) -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col justify-between">

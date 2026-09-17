@@ -27,7 +27,6 @@ class StoreDocenteRequest extends FormRequest
             'fecha_nacimiento'    => ['nullable', 'date', 'before_or_equal:today'],
             'fecha_incorporacion' => ['nullable', 'date'],
             'telefono'            => ['nullable', 'string', 'max:20'],
-            'tarifa_horaria'      => ['nullable', 'numeric', 'min:0'],
             'observaciones'       => ['nullable', 'string'],
             'especialidades'      => ['nullable', 'array'],
             'especialidades.*'    => ['integer', 'exists:especialidad,id'],
@@ -53,8 +52,6 @@ class StoreDocenteRequest extends FormRequest
             'estado.in'                => 'El estado debe ser ACTIVO o INACTIVO.',
             'fecha_nacimiento.date'    => 'La fecha de nacimiento no tiene un formato válido.',
             'fecha_nacimiento.before_or_equal' => 'La fecha de nacimiento no puede ser una fecha futura.',
-            'tarifa_horaria.numeric'   => 'La tarifa horaria debe ser un número.',
-            'tarifa_horaria.min'       => 'La tarifa horaria no puede ser negativa.',
             'especialidades.array'     => 'Las especialidades deben ser una lista.',
             'especialidades.*.exists'  => 'Una o más especialidades no son válidas.',
         ];

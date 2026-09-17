@@ -26,7 +26,7 @@
             <select v-model="form.grupo_id" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
               <option value="" disabled>Seleccione un grupo</option>
               <option v-for="g in grupos" :key="g.id" :value="g.id">
-                {{ g.codigo_grupo }} - {{ g.curso?.nombre }} (Precio: {{ g.curso?.precio }} Bs)
+                {{ g.codigo_grupo }} - {{ g.curso?.nombre }}
               </option>
             </select>
             <p v-if="form.errors.grupo_id" class="mt-1 text-xs text-red-600">{{ form.errors.grupo_id }}</p>

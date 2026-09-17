@@ -25,14 +25,12 @@ class Docente extends Model
         'fecha_nacimiento',
         'fecha_incorporacion',
         'telefono',
-        'tarifa_horaria',
         'observaciones',
     ];
 
     protected $casts = [
         'fecha_nacimiento'    => 'date',
         'fecha_incorporacion' => 'date',
-        'tarifa_horaria'      => 'decimal:2',
     ];
 
     // ─── Relationships ───────────────────────────────────────────────────────

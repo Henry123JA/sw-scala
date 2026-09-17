@@ -96,8 +96,6 @@ const routeNames = {
   'grupos': 'Grupos',
   'horarios': 'Horarios',
   'inscripciones': 'Inscripciones',
-  'mensualidades': 'Mensualidades',
-  'seguimiento': 'Seguimiento',
   'reportes': 'Reportes',
   'bitacora': 'Bitácora de Eventos',
 };

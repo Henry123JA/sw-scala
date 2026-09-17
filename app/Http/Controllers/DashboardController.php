@@ -32,7 +32,7 @@ class DashboardController extends Controller
         }
 
         if ($rol === 'Secretaria') {
-            return redirect()->route('mensualidades.index');
+            return redirect()->route('inscripciones.index');
         }
 
         // Propietario only

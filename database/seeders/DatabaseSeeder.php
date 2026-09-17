@@ -20,7 +20,6 @@ class DatabaseSeeder extends Seeder
             PermisoSeeder::class,
             MenuSeeder::class,
             RolMenuSeeder::class,
-            MetodoPagoSeeder::class,
             EspecialidadSeeder::class,
             AdminSeeder::class,
             DemoDataSeeder::class,

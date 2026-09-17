@@ -65,11 +65,6 @@
             <label class="block text-sm font-medium text-gray-700">Teléfono</label>
             <input v-model="form.telefono" type="text" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Tarifa horaria (Bs)</label>
-            <input v-model="form.tarifa_horaria" type="number" step="0.01" min="0" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
-            <p v-if="form.errors.tarifa_horaria" class="mt-1 text-xs text-red-600">{{ form.errors.tarifa_horaria }}</p>
-          </div>
         </div>
 
         <div>
@@ -135,7 +130,6 @@ const form = useForm({
   fecha_nacimiento: '',
   fecha_incorporacion: '',
   telefono: '',
-  tarifa_horaria: '',
   observaciones: '',
   especialidades: [],
 });

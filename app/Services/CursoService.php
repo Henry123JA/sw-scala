@@ -56,16 +56,11 @@ class CursoService
      */
     public function crear(array $data): Curso
     {
-        if (isset($data['precio']) && $data['precio'] < 0) {
-            throw new BusinessException('El precio no puede ser menor a 0.', 'precio');
-        }
-
         return Curso::create([
             'nombre'            => $data['nombre'],
             'descripcion'       => $data['descripcion'] ?? null,
             'tipo_ensenanza'    => $data['tipo_ensenanza'] ?? null,
             'duracion_estandar' => $data['duracion_estandar'] ?? null,
-            'precio'            => $data['precio'],
             'estado'            => $data['estado'] ?? 'ACTIVO',
             'eliminado'         => false,
         ]);
@@ -78,10 +73,6 @@ class CursoService
     {
         $curso = Curso::findOrFail($id);
 
-        if (isset($data['precio']) && $data['precio'] < 0) {
-            throw new BusinessException('El precio no puede ser menor a 0.', 'precio');
-        }
-
         // Deactivation validation:
         if (isset($data['estado']) && $data['estado'] === 'INACTIVO' && $curso->estado !== 'INACTIVO') {
             $hasActiveGroups = $curso->grupos()->where('estado', 'ACTIVO')->exists();
@@ -90,33 +81,13 @@ class CursoService
             }
         }
 
-        $precioAnterior = (float)$curso->precio;
-        $precioNuevo = isset($data['precio']) ? (float)$data['precio'] : null;
-
         $curso->update(array_filter([
             'nombre'            => $data['nombre'] ?? null,
             'descripcion'       => $data['descripcion'] ?? null,
             'tipo_ensenanza'    => $data['tipo_ensenanza'] ?? null,
             'duracion_estandar' => $data['duracion_estandar'] ?? null,
-            'precio'            => $data['precio'] ?? null,
             'estado'            => $data['estado'] ?? null,
         ], fn($v) => $v !== null));
-
-        if ($precioNuevo !== null && abs($precioNuevo - $precioAnterior) > 0.001) {
-            $grupoIds = $curso->grupos()->pluck('id');
-            
-            $inscripciones = \App\Models\Inscripcion::whereIn('grupo_id', $grupoIds)
-                ->whereIn('estado', ['ACTIVA', 'PAUSADA'])
-                ->get();
-                
-            foreach ($inscripciones as $inscripcion) {
-                $inscripcion->update(['monto_mensual' => $precioNuevo]);
-                
-                \App\Models\Mensualidad::where('inscripcion_id', $inscripcion->id)
-                    ->whereIn('estado', ['PENDIENTE', 'ATRASADO'])
-                    ->update(['monto_base' => $precioNuevo]);
-            }
-        }
 
         return $curso->fresh();
     }

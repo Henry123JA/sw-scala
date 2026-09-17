@@ -15,14 +15,12 @@ class Curso extends Model
         'descripcion',
         'tipo_ensenanza',
         'duracion_estandar',
-        'precio',
         'estado',
         'eliminado',
     ];
 
     protected $casts = [
         'eliminado' => 'boolean',
-        'precio'    => 'decimal:2',
     ];
 
     protected static function booted(): void

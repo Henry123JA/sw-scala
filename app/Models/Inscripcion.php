@@ -19,8 +19,7 @@ class Inscripcion extends Model
         'fecha_inicio_clases',
         'fecha_pausa',
         'fecha_retorno',
-        'fecha_vencimiento',
-        'monto_mensual',
+        'fecha_retiro',
         'estado',
         'observaciones',
     ];
@@ -30,8 +29,7 @@ class Inscripcion extends Model
         'fecha_inicio_clases'=> 'date',
         'fecha_pausa'        => 'date',
         'fecha_retorno'      => 'date',
-        'fecha_vencimiento'  => 'date',
-        'monto_mensual'      => 'decimal:2',
+        'fecha_retiro'       => 'date',
     ];
 
     public function alumno(): BelongsTo
@@ -42,10 +40,5 @@ class Inscripcion extends Model
     public function grupo(): BelongsTo
     {
         return $this->belongsTo(Grupo::class, 'grupo_id');
-    }
-
-    public function mensualidades(): HasMany
-    {
-        return $this->hasMany(Mensualidad::class, 'inscripcion_id');
     }
 }
