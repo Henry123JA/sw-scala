@@ -1,27 +1,17 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-tema-categoria="{{ request()->attributes->get('temaCategoria', 'adultos') }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
-
-        <!-- FOUC Prevention: set data-tema BEFORE CSS paints -->
-        <script>
-            (function(){
-                var c = document.documentElement.dataset.temaCategoria || 'adultos';
-                var h = new Date().getHours();
-                var m = (h >= 6 && h < 18) ? 'dia' : 'noche';
-                document.documentElement.dataset.tema = c + '-' + m;
-            })();
-        </script>
+        <title inertia>{{ config('app.name', 'Scala Musical') }}</title>
 
         <!-- Scripts & Styles -->
         @routes
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased bg-[#F8FFFD] text-[#1F2937]">
         @inertia
     </body>
 </html>

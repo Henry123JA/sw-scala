@@ -4,9 +4,6 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use App\Services\TemaService;
-use Closure;
-use Symfony\Component\HttpFoundation\Response;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -16,21 +13,6 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
-
-    public function __construct(
-        protected TemaService $temaService
-    ) {}
-
-    /**
-     * Override handle to set view-accessible request attributes before share().
-     */
-    public function handle(Request $request, Closure $next): Response
-    {
-        $user = $request->user();
-        $request->attributes->set('temaCategoria', $user?->tema?->nombre ?? 'adultos');
-
-        return parent::handle($request, $next);
-    }
 
     /**
      * Determine the current asset version.
@@ -54,12 +36,6 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user ? $user->only('id', 'nombres', 'apellidos', 'email', 'foto_url') : null,
                 'rol' => $user?->rol?->nombre,
             ],
-            'temaActual' => $user?->tema?->nombre ?? 'adultos',
-            'temasDisponibles' => $this->temaService->listarTemas()->map(fn($tema) => [
-                'id'          => $tema->id,
-                'nombre'      => $tema->nombre,
-                'descripcion' => $tema->descripcion,
-            ])->values(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

@@ -9,6 +9,90 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* ── Clases Reutilizables Nota Menta ─────────────────────────────────────── */
+.card-menta {
+  background-color: #FFFFFF;
+  border: 1px solid #DDEFEA;
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.btn-menta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #14B8A6;
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  transition: all 150ms ease-in-out;
+  cursor: pointer;
+}
+.btn-menta:hover {
+  background-color: #0D9488;
+}
+.btn-menta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-menta-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #FFFFFF;
+  color: #0F766E;
+  border: 1px solid #DDEFEA;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  transition: all 150ms ease-in-out;
+  cursor: pointer;
+}
+.btn-menta-outline:hover {
+  background-color: #F0FDF9;
+  border-color: #6EE7B7;
+}
+
+.badge-menta {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: #D1FAE5;
+  color: #0F766E;
+}
+
+.input-menta {
+  width: 100%;
+  background-color: #FFFFFF;
+  border: 1px solid #DDEFEA;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.875rem;
+  color: #1F2937;
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.input-menta:focus {
+  border-color: #14B8A6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+
+.table-header-menta {
+  background-color: #F0FDF9;
+  color: #0F766E;
+  font-weight: 700;
+  border-bottom: 1px solid #DDEFEA;
+}
+
 /* ── Custom Scrollbar ───────────────────────────────────────────────────── */
 /* WebKit (Chrome, Edge, Safari) */
 ::-webkit-scrollbar {
@@ -19,26 +103,26 @@
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(15, 118, 110, 0.2);
     border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.30);
+    background: rgba(15, 118, 110, 0.4);
 }
 
 /* Firefox */
 * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+    scrollbar-color: rgba(15, 118, 110, 0.2) transparent;
 }
 
 /* ── Scrollbar dentro del sidebar ────────────────────────────────────────── */
 .sidebar-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.10);
+    background: rgba(15, 118, 110, 0.15);
 }
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(15, 118, 110, 0.35);
 }
 .sidebar-scroll {
-    scrollbar-color: rgba(255, 255, 255, 0.10) transparent;
+    scrollbar-color: rgba(15, 118, 110, 0.15) transparent;
 }

@@ -23,7 +23,6 @@ class Usuario extends Authenticatable
         'email',
         'password',
         'rol_id',
-        'tema_id',
         'foto',
         'eliminado',
     ];
@@ -93,11 +92,6 @@ class Usuario extends Authenticatable
     public function rol(): BelongsTo
     {
         return $this->belongsTo(Rol::class, 'rol_id');
-    }
-
-    public function tema(): BelongsTo
-    {
-        return $this->belongsTo(Tema::class, 'tema_id');
     }
 
     public function alumno(): HasOne

@@ -6,7 +6,6 @@ use App\Exceptions\BusinessException;
 use App\Models\Alumno;
 use App\Models\Docente;
 use App\Models\Rol;
-use App\Models\Tema;
 use App\Models\Usuario;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
@@ -35,11 +34,6 @@ class UsuarioService
         return $rol->id;
     }
 
-    private function getTemaDefaultId(): ?int
-    {
-        return Tema::where('nombre', 'adultos')->value('id');
-    }
-
     private function buildUsuarioData(array $data, string $rolNombre): array
     {
         $base = [
@@ -49,7 +43,6 @@ class UsuarioService
             'email'     => $data['email'],
             'password'  => Hash::make($data['password']),
             'rol_id'    => $this->getRolId($rolNombre),
-            'tema_id'   => $data['tema_id'] ?? $this->getTemaDefaultId(),
             'eliminado' => false,
         ];
 
@@ -155,7 +148,6 @@ class UsuarioService
             'apellidos' => $data['apellidos'] ?? null,
             'ci'        => $data['ci'] ?? null,
             'email'     => $data['email'] ?? null,
-            'tema_id'   => $data['tema_id'] ?? null,
         ], fn($v) => $v !== null);
 
         if (!empty($data['password'])) {

@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolSeeder::class,
-            TemaSeeder::class,
+            // TemaSeeder desacoplado: tema unificado en frontend (Nota Menta Claro)
             PermisoSeeder::class,
             // MenuSeeder y RolMenuSeeder desacoplados de la siembra principal
             EspecialidadSeeder::class,

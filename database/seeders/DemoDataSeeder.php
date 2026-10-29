@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Rol;
-use App\Models\Tema;
 use App\Models\Usuario;
 use App\Models\Docente;
 use App\Models\Alumno;
@@ -40,7 +39,6 @@ class DemoDataSeeder extends Seeder
         $rolDocente     = Rol::where('nombre', 'Docente')->first();
         $rolAlumno      = Rol::where('nombre', 'Alumno')->first();
         $rolSecretaria  = Rol::where('nombre', 'Secretaria')->first();
-        $temaDefault    = Tema::where('nombre', 'adultos')->first();
 
 
         // ─────────────────────────────────────────────────────────────
@@ -55,7 +53,6 @@ class DemoDataSeeder extends Seeder
                 'codigo'    => 'SEC-001',
                 'password'  => Hash::make('123456'),
                 'rol_id'    => $rolSecretaria?->id,
-                'tema_id'   => $temaDefault?->id,
                 'eliminado' => false,
             ]
         );
@@ -162,7 +159,6 @@ class DemoDataSeeder extends Seeder
                     'codigo'    => $data['codigo'],
                     'password'  => Hash::make('123456'),
                     'rol_id'    => $rolDocente?->id,
-                    'tema_id'   => $temaDefault?->id,
                     'eliminado' => false,
                 ]
             );
@@ -533,7 +529,6 @@ class DemoDataSeeder extends Seeder
                     'codigo'    => $ad['codigo'],
                     'password'  => Hash::make('123456'),
                     'rol_id'    => $rolAlumno?->id,
-                    'tema_id'   => $temaDefault?->id,
                     'eliminado' => false,
                 ]
             );

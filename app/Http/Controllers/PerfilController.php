@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Exceptions\BusinessException;
 use App\Http\Requests\Perfil\UpdatePerfilFotoRequest;
 use App\Http\Requests\Perfil\UpdatePerfilRequest;
-use App\Services\TemaService;
 use App\Services\UsuarioService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,8 +14,7 @@ use Inertia\Response;
 class PerfilController extends Controller
 {
     public function __construct(
-        protected UsuarioService $usuarios,
-        protected TemaService $temas
+        protected UsuarioService $usuarios
     ) {}
 
     /**
@@ -24,12 +22,8 @@ class PerfilController extends Controller
      */
     public function index(Request $request): Response
     {
-        $user  = $request->user()->load('tema');
-        $temas = $this->temas->listarTemas();
-
         return Inertia::render('Perfil/Index', [
-            'user'  => $user,
-            'temas' => $temas,
+            'user' => $request->user(),
         ]);
     }
 

@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PerfilController;
-use App\Http\Controllers\TemaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\HorarioController;
@@ -23,7 +22,6 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
     Route::get('/perfil', [PerfilController::class, 'index'])->name('perfil.index');
     Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
     Route::post('/perfil/foto', [PerfilController::class, 'updateFoto'])->name('perfil.foto.store');
-    Route::post('/perfil/tema', [TemaController::class, 'update'])->name('perfil.tema.update');
 
     // ── Gestión de Usuarios — CU1 ────────────────────────────────────────────
     Route::middleware(['role:Propietario,Secretaria'])->group(function () {

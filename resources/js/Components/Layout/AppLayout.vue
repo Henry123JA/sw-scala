@@ -1,6 +1,6 @@
 <template>
   <div class="app-shell">
-    <!-- Sidebar Navigation -->
+    <!-- Sidebar Navigation Nota Menta Claro -->
     <Sidebar />
 
     <!-- Main Content Workspace -->
@@ -20,29 +20,9 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, watch } from 'vue';
-import { usePage } from '@inertiajs/vue3';
-import { useTheme } from '@/Composables/useTheme';
 import Sidebar from './Sidebar.vue';
 import Header from './Header.vue';
 import Footer from './Footer.vue';
-
-const page = usePage();
-const { startAutoUpdate, stopAutoUpdate } = useTheme();
-
-onMounted(() => {
-  startAutoUpdate(page.props.temaActual || 'adultos');
-});
-
-onUnmounted(() => {
-  stopAutoUpdate();
-});
-
-watch(() => page.props.temaActual, (newTheme) => {
-  if (newTheme) {
-    startAutoUpdate(newTheme);
-  }
-});
 </script>
 
 <style scoped>
