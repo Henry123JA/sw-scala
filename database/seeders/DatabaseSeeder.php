@@ -18,8 +18,7 @@ class DatabaseSeeder extends Seeder
             RolSeeder::class,
             TemaSeeder::class,
             PermisoSeeder::class,
-            MenuSeeder::class,
-            RolMenuSeeder::class,
+            // MenuSeeder y RolMenuSeeder desacoplados de la siembra principal
             EspecialidadSeeder::class,
             AdminSeeder::class,
             DemoDataSeeder::class,

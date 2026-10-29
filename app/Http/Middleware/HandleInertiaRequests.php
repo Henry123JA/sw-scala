@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use App\Services\MenuService;
 use App\Services\TemaService;
 use Closure;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +18,6 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     public function __construct(
-        protected MenuService $menuService,
         protected TemaService $temaService
     ) {}
 
@@ -56,7 +54,6 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user ? $user->only('id', 'nombres', 'apellidos', 'email', 'foto_url') : null,
                 'rol' => $user?->rol?->nombre,
             ],
-            'menuItems' => $user ? $this->menuService->getMenuPorRol($user->rol_id) : collect(),
             'temaActual' => $user?->tema?->nombre ?? 'adultos',
             'temasDisponibles' => $this->temaService->listarTemas()->map(fn($tema) => [
                 'id'          => $tema->id,

@@ -1,27 +1,40 @@
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <!-- Welcome Card -->
-      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+      <!-- Welcome Card Nota Menta -->
+      <div class="bg-gradient-to-r from-white via-white to-[#F0FDF9] p-6 rounded-2xl shadow-xs border border-[#DDEFEA] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 mb-1" :style="{ color: 'var(--color-primary)' }">
-            Bienvenido al Sistema de Gestión Académica
+          <div class="flex items-center space-x-2 mb-1">
+            <span class="px-2.5 py-0.5 text-xs font-bold bg-[#D1FAE5] text-[#0F766E] rounded-full uppercase tracking-wider">
+              Control Académico
+            </span>
+          </div>
+          <h1 class="text-2xl font-black text-[#1F2937] tracking-tight">
+            Bienvenido a Scala Musical
           </h1>
-          <p class="text-gray-500 text-sm">
-            Control académico de estudiantes, cursos, grupos, horarios e inscripciones en tiempo real.
+          <p class="text-[#6B7280] text-sm mt-1">
+            Gestión en tiempo real de estudiantes, cursos, grupos, horarios e inscripciones.
           </p>
+        </div>
+        <div class="hidden lg:flex items-center space-x-2 bg-white px-4 py-2 rounded-xl border border-[#DDEFEA] shadow-xs">
+          <div class="w-3 h-3 rounded-full bg-[#14B8A6] animate-pulse"></div>
+          <span class="text-xs font-semibold text-[#0F766E]">Sistema Operativo Activo</span>
         </div>
       </div>
 
       <!-- Quick Stats Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div v-for="stat in statsData" :key="stat.label" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-          <div class="p-3 rounded-lg bg-gray-50" :style="{ color: 'var(--color-primary)' }">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div
+          v-for="stat in statsData"
+          :key="stat.label"
+          class="bg-white p-5 rounded-2xl shadow-xs border border-[#DDEFEA] flex items-center space-x-4 hover:border-[#6EE7B7] transition-colors"
+        >
+          <div class="p-3.5 rounded-xl bg-[#D1FAE5] text-[#0F766E] shrink-0 shadow-2xs">
             <component :is="stat.icon" class="w-6 h-6" />
           </div>
-          <div>
-            <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">{{ stat.label }}</p>
-            <p class="text-2xl font-extrabold text-gray-900 mt-0.5">{{ stat.value }}</p>
+          <div class="min-w-0">
+            <p class="text-xs text-[#6B7280] font-bold uppercase tracking-wider truncate">{{ stat.label }}</p>
+            <p class="text-2xl font-black text-[#1F2937] mt-0.5">{{ stat.value }}</p>
           </div>
         </div>
       </div>
@@ -29,16 +42,30 @@
       <!-- Charts Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Students per Course -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Alumnos por Curso</h3>
+        <div class="bg-white p-6 rounded-2xl shadow-xs border border-[#DDEFEA]">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-extrabold text-[#1F2937] uppercase tracking-wider">
+              Alumnos por Curso
+            </h3>
+            <span class="text-xs font-semibold text-[#0F766E] bg-[#D1FAE5] px-2 py-0.5 rounded-full">
+              Distribución
+            </span>
+          </div>
           <div class="relative" style="height: 260px">
             <canvas ref="courseChartRef"></canvas>
           </div>
         </div>
 
         <!-- Enrollments Trend -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Inscripciones Académicas (12 meses)</h3>
+        <div class="bg-white p-6 rounded-2xl shadow-xs border border-[#DDEFEA]">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-extrabold text-[#1F2937] uppercase tracking-wider">
+              Inscripciones Académicas (12 meses)
+            </h3>
+            <span class="text-xs font-semibold text-[#0F766E] bg-[#D1FAE5] px-2 py-0.5 rounded-full">
+              Tendencia
+            </span>
+          </div>
           <div class="relative" style="height: 260px">
             <canvas ref="enrollmentChartRef"></canvas>
           </div>
@@ -103,8 +130,8 @@ const enrollmentChartRef = ref(null);
 let courseChart = null;
 let enrollmentChart = null;
 
-const PRIMARY = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#2563eb';
-const palette = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+// Paleta Nota Menta para gráficos
+const paletteNotaMenta = ['#14B8A6', '#10B981', '#06B6D4', '#6EE7B7', '#0F766E', '#3B82F6', '#8B5CF6'];
 
 function buildCourseChart() {
   if (!courseChartRef.value) return;
@@ -113,12 +140,12 @@ function buildCourseChart() {
   const values = data.map(d => d.cantidad);
 
   if (values.length === 0) {
-    // Show "sin datos" message
     const ctx = courseChartRef.value;
-    ctx.getContext('2d').font = '13px sans-serif';
-    ctx.getContext('2d').fillStyle = '#9CA3AF';
-    ctx.getContext('2d').textAlign = 'center';
-    ctx.getContext('2d').fillText('Sin datos de alumnos por curso', ctx.width / 2, ctx.height / 2);
+    const context = ctx.getContext('2d');
+    context.font = '13px sans-serif';
+    context.fillStyle = '#9CA3AF';
+    context.textAlign = 'center';
+    context.fillText('Sin datos de alumnos por curso', ctx.width / 2, ctx.height / 2);
     return;
   }
   courseChart = new Chart(courseChartRef.value, {
@@ -128,9 +155,9 @@ function buildCourseChart() {
       datasets: [{
         label: 'Alumnos',
         data: values,
-        backgroundColor: palette.slice(0, values.length),
-        borderRadius: 4,
-        barThickness: 20,
+        backgroundColor: paletteNotaMenta.slice(0, values.length),
+        borderRadius: 6,
+        barThickness: 18,
       }]
     },
     options: {
@@ -140,14 +167,24 @@ function buildCourseChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: '#1F2937',
+          padding: 10,
+          cornerRadius: 8,
           callbacks: {
             label: (ctx) => `${ctx.raw} alumno(s)`
           }
         }
       },
       scales: {
-        x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } },
-        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        x: {
+          beginAtZero: true,
+          grid: { color: '#F0FDF9' },
+          ticks: { stepSize: 1, font: { size: 11 }, color: '#6B7280' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { font: { size: 11, weight: 'bold' }, color: '#1F2937' }
+        }
       }
     }
   });
@@ -166,19 +203,34 @@ function buildEnrollmentChart() {
       datasets: [{
         label: 'Inscripciones',
         data: values,
-        backgroundColor: PRIMARY + '80',
-        borderColor: PRIMARY,
+        backgroundColor: '#14B8A6CC',
+        hoverBackgroundColor: '#14B8A6',
+        borderColor: '#0F766E',
         borderWidth: 1,
-        borderRadius: 4,
+        borderRadius: 6,
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1F2937',
+          padding: 10,
+          cornerRadius: 8,
+        }
+      },
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } },
-        x: { grid: { display: false } }
+        y: {
+          beginAtZero: true,
+          grid: { color: '#F0FDF9' },
+          ticks: { stepSize: 1, color: '#6B7280' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#6B7280', font: { size: 10 } }
+        }
       }
     }
   });
@@ -196,7 +248,6 @@ function buildCharts() {
 }
 
 onMounted(() => {
-  // Need a tick for the computed PRIMARY to be available
   setTimeout(buildCharts, 50);
 });
 
@@ -204,7 +255,6 @@ onUnmounted(() => {
   destroyCharts();
 });
 
-// Rebuild if stats data changes (e.g. soft navigation)
 watch(() => props.stats, () => {
   buildCharts();
 });

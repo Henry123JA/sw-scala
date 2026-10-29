@@ -1,31 +1,56 @@
 <template>
   <aside
-    class="bg-gray-950 text-gray-300 flex flex-col h-full border-r border-gray-800 transition-all duration-250 ease-in-out"
+    class="bg-white text-gray-700 flex flex-col h-full border-r border-[#DDEFEA] transition-all duration-250 ease-in-out shadow-sm select-none"
     :class="collapsed ? 'w-16' : 'w-64 overflow-hidden'"
     @mouseleave="collapsed && scheduleCloseFlyout()"
   >
     <!-- Brand / Title -->
-    <div class="h-16 flex items-center border-b border-gray-800 shrink-0" :class="collapsed ? 'justify-center px-0' : 'px-6'">
-      <h1 v-show="!collapsed" class="text-xl font-bold tracking-wider whitespace-nowrap cursor-default" :style="{ color: 'var(--color-primary)' }">
-        ACADEMIA
-      </h1>
-      <span v-show="!collapsed" class="ml-2 px-2 py-0.5 text-xs bg-gray-800 text-gray-400 rounded-full font-mono whitespace-nowrap cursor-default">
+    <div
+      class="h-16 flex items-center border-b border-[#DDEFEA] shrink-0"
+      :class="collapsed ? 'justify-center px-0' : 'px-5 justify-between'"
+    >
+      <div v-show="!collapsed" class="flex items-center space-x-2.5 overflow-hidden">
+        <div class="w-8 h-8 rounded-lg bg-[#D1FAE5] text-[#0F766E] flex items-center justify-center shrink-0 shadow-xs">
+          <component :is="Lucide.Music" class="w-4 h-4" />
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-sm font-extrabold tracking-wide text-gray-900 truncate">
+            SCALA MUSICAL
+          </span>
+          <span class="text-[10px] uppercase font-semibold tracking-wider text-[#0F766E]">
+            Academia Web
+          </span>
+        </div>
+      </div>
+
+      <span
+        v-show="!collapsed"
+        class="px-2 py-0.5 text-[10px] font-bold bg-[#D1FAE5] text-[#0F766E] rounded-full font-mono shrink-0"
+      >
         v1.0
       </span>
-      <span v-show="collapsed" class="text-lg font-bold tracking-wider cursor-default" :style="{ color: 'var(--color-primary)' }">
-        AM
-      </span>
+
+      <div
+        v-show="collapsed"
+        class="w-8 h-8 rounded-lg bg-[#D1FAE5] text-[#0F766E] flex items-center justify-center shrink-0 shadow-xs cursor-default"
+        title="Scala Musical"
+      >
+        <component :is="Lucide.Music" class="w-4 h-4" />
+      </div>
     </div>
 
-    <!-- User Information — clicable → /perfil -->
+    <!-- User Information — Clicable hacia /perfil -->
     <Link
       v-if="auth.user"
       :href="buildUrl('/perfil')"
-      class="p-4 border-b border-gray-800 flex items-center shrink-0 hover:bg-gray-900 transition-colors duration-200 cursor-pointer"
+      class="p-3.5 border-b border-[#DDEFEA] flex items-center shrink-0 hover:bg-[#F0FDF9] transition-colors duration-150 cursor-pointer"
       :class="collapsed ? 'justify-center' : 'space-x-3'"
-      :title="collapsed ? `${auth.user.nombres} ${auth.user.apellidos} — Ir a perfil` : undefined"
+      :title="collapsed ? `${auth.user.nombres} ${auth.user.apellidos} — Ver Perfil` : undefined"
     >
-      <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center font-bold text-white uppercase shrink-0 cursor-pointer" :style="!auth.user.foto_url ? { backgroundColor: 'var(--color-primary)' } : {}">
+      <div
+        class="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center font-bold text-white text-xs uppercase shrink-0 shadow-xs cursor-pointer ring-2 ring-[#D1FAE5]"
+        :style="!auth.user.foto_url ? { backgroundColor: '#14B8A6' } : {}"
+      >
         <img
           v-if="auth.user.foto_url"
           :src="auth.user.foto_url"
@@ -37,53 +62,67 @@
           {{ auth.user.nombres[0] }}{{ auth.user.apellidos[0] }}
         </span>
       </div>
-      <div v-show="!collapsed" class="min-w-0 flex-1 cursor-pointer">
-        <p class="text-sm font-semibold text-white truncate">{{ auth.user.nombres }} {{ auth.user.apellidos }}</p>
-        <p class="text-xs text-gray-400 truncate uppercase tracking-wider font-semibold">{{ auth.rol }}</p>
+      <div v-show="!collapsed" class="min-w-0 flex-1">
+        <p class="text-xs font-bold text-gray-900 truncate">{{ auth.user.nombres }} {{ auth.user.apellidos }}</p>
+        <p class="text-[10px] font-semibold text-[#0F766E] uppercase tracking-wider truncate">{{ auth.rol }}</p>
       </div>
     </Link>
 
-    <!-- Menu Items -->
-    <nav class="flex-grow overflow-y-auto p-4 space-y-1 sidebar-scroll">
-      <div v-for="item in menuItems" :key="item.id" class="space-y-1">
-        <!-- If item has submenus (hijos) — with flyout when collapsed -->
-        <div v-if="item.hijos && item.hijos.length > 0" class="relative">
+    <!-- Navigation Items -->
+    <nav class="flex-grow overflow-y-auto p-3 space-y-1 sidebar-scroll">
+      <div v-for="item in menuItems" :key="item.label" class="space-y-1">
+        <!-- If item has children submenus -->
+        <div v-if="item.children && item.children.length > 0" class="relative">
           <button
-            @click="toggleGroup(item.id)"
+            type="button"
+            @click="toggleGroup(item.label)"
             @mouseenter="onGroupEnter(item, $event)"
-            :title="collapsed ? item.nombre : undefined"
-            class="w-full flex items-center rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors duration-200 cursor-pointer"
-            :class="[collapsed ? 'justify-center px-3 py-2.5' : 'justify-between px-4 py-2.5', isGroupActive(item) ? 'text-white' : 'text-gray-400 hover:text-white']"
+            :title="collapsed ? item.label : undefined"
+            class="w-full flex items-center rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer"
+            :class="[
+              collapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2.5',
+              isGroupActive(item)
+                ? 'bg-[#D1FAE5] text-[#0F766E]'
+                : 'text-gray-600 hover:text-[#0F766E] hover:bg-[#F0FDF9]'
+            ]"
           >
-            <div class="flex items-center" :class="collapsed ? 'justify-center' : 'space-x-3'">
-              <component :is="getIcon(item.icono)" class="w-5 h-5 shrink-0" />
-              <span v-show="!collapsed" class="sidebar-text whitespace-nowrap">{{ item.nombre }}</span>
+            <div class="flex items-center" :class="collapsed ? 'justify-center' : 'space-x-2.5'">
+              <component
+                :is="getIcon(item.icon)"
+                class="w-4 h-4 shrink-0 transition-colors duration-150"
+                :class="isGroupActive(item) ? 'text-[#0F766E]' : 'text-gray-500'"
+              />
+              <span v-show="!collapsed" class="whitespace-nowrap">{{ item.label }}</span>
             </div>
             <!-- Chevron indicator -->
             <component
               v-show="!collapsed"
-              :is="openGroups[item.id] ? Lucide.ChevronDown : Lucide.ChevronRight"
-              class="w-4 h-4 transition-transform duration-200 shrink-0"
+              :is="openGroups[item.label] ? Lucide.ChevronDown : Lucide.ChevronRight"
+              class="w-3.5 h-3.5 shrink-0 transition-transform duration-200"
+              :class="isGroupActive(item) ? 'text-[#0F766E]' : 'text-gray-400'"
             />
           </button>
 
-          <!-- Submenu Child Items (expanded mode) -->
+          <!-- Submenu Child Items (Expanded mode) -->
           <div
-            v-show="!collapsed && openGroups[item.id]"
-            class="pl-9 mt-1 space-y-1 border-l border-gray-800 ml-6"
+            v-show="!collapsed && openGroups[item.label]"
+            class="pl-6 mt-1 space-y-1 border-l-2 border-[#DDEFEA] ml-4"
           >
             <Link
-              v-for="subItem in item.hijos"
-              :key="subItem.id"
-              :href="buildUrl(subItem.ruta)"
-              class="block px-4 py-2 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer"
-              :class="isUrlActive(subItem.ruta) ? 'text-white font-bold' : 'text-gray-400 hover:text-white hover:bg-gray-900'"
-              :style="isUrlActive(subItem.ruta) ? { color: 'var(--color-primary)' } : {}"
+              v-for="subItem in item.children"
+              :key="subItem.route"
+              :href="buildUrl(subItem.path)"
+              class="flex items-center space-x-2 px-3 py-2 rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer"
+              :class="isUrlActive(subItem.path)
+                ? 'bg-[#E6FBF2] text-[#0F766E] font-bold shadow-2xs'
+                : 'text-gray-600 hover:text-[#0F766E] hover:bg-[#F0FDF9]'"
             >
-              <div class="flex items-center space-x-2">
-                <component :is="getIcon(subItem.icono)" class="w-4 h-4" />
-                <span class="sidebar-text">{{ subItem.nombre }}</span>
-              </div>
+              <component
+                :is="getIcon(subItem.icon)"
+                class="w-3.5 h-3.5 shrink-0"
+                :class="isUrlActive(subItem.path) ? 'text-[#0F766E]' : 'text-gray-400'"
+              />
+              <span class="truncate">{{ subItem.label }}</span>
             </Link>
           </div>
         </div>
@@ -91,49 +130,67 @@
         <!-- If item is a single route link -->
         <Link
           v-else
-          :href="buildUrl(item.ruta)"
-          :title="collapsed ? item.nombre : undefined"
-          class="flex items-center rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer"
-          :class="[collapsed ? 'justify-center px-3 py-2.5' : 'space-x-3 px-4 py-2.5', isUrlActive(item.ruta) ? 'text-white font-bold' : 'text-gray-400 hover:text-white hover:bg-gray-900']"
-          :style="isUrlActive(item.ruta) ? { backgroundColor: 'rgba(255, 255, 255, 0.05)', color: 'var(--color-primary)' } : {}"
+          :href="buildUrl(item.path)"
+          :title="collapsed ? item.label : undefined"
+          class="flex items-center rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer"
+          :class="[
+            collapsed ? 'justify-center p-2.5' : 'space-x-2.5 px-3 py-2.5',
+            isUrlActive(item.path)
+              ? 'bg-[#D1FAE5] text-[#0F766E] font-bold shadow-2xs'
+              : 'text-gray-600 hover:text-[#0F766E] hover:bg-[#F0FDF9]'
+          ]"
         >
-          <component :is="getIcon(item.icono)" class="w-5 h-5 shrink-0" />
-          <span v-show="!collapsed" class="sidebar-text whitespace-nowrap">{{ item.nombre }}</span>
+          <component
+            :is="getIcon(item.icon)"
+            class="w-4 h-4 shrink-0"
+            :class="isUrlActive(item.path) ? 'text-[#0F766E]' : 'text-gray-500'"
+          />
+          <span v-show="!collapsed" class="whitespace-nowrap">{{ item.label }}</span>
         </Link>
       </div>
     </nav>
 
     <!-- Collapse Toggle Button -->
-    <div class="border-t border-gray-800 p-3 shrink-0" :class="collapsed ? 'flex justify-center' : ''">
+    <div class="border-t border-[#DDEFEA] p-2.5 shrink-0" :class="collapsed ? 'flex justify-center' : ''">
       <button
+        type="button"
         @click="toggleCollapse"
-        class="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-white hover:bg-gray-900 transition-colors duration-200 cursor-pointer mx-auto"
+        class="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-[#0F766E] hover:bg-[#F0FDF9] transition-colors duration-150 cursor-pointer mx-auto"
         :title="collapsed ? 'Expandir menú' : 'Colapsar menú'"
       >
-        <component :is="Lucide.PanelLeftClose" class="w-5 h-5 transition-transform duration-250" :class="collapsed ? 'rotate-180' : ''" />
+        <component
+          :is="Lucide.PanelLeftClose"
+          class="w-4 h-4 transition-transform duration-250"
+          :class="collapsed ? 'rotate-180' : ''"
+        />
       </button>
     </div>
 
     <!-- ── Flyout for collapsed hover ────────────────────────────────────── -->
     <div
       v-if="collapsed && flyoutOpen && flyoutItem"
-      class="fixed z-50 bg-gray-900 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[200px]"
+      class="fixed z-50 bg-white border border-[#DDEFEA] rounded-xl shadow-xl py-1.5 min-w-[200px]"
       :style="{ left: '68px', top: flyoutTop + 'px' }"
       @mouseenter="cancelCloseFlyout()"
       @mouseleave="closeFlyout()"
     >
-      <div class="px-3 py-1.5 text-xs font-bold text-gray-400 uppercase tracking-wider cursor-default">
-        {{ flyoutItem.nombre }}
+      <div class="px-3.5 py-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-[#DDEFEA]">
+        {{ flyoutItem.label }}
       </div>
-      <Link
-        v-for="sub in flyoutItem.hijos"
-        :key="sub.id"
-        :href="buildUrl(sub.ruta)"
-        class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 transition-colors duration-150 cursor-pointer"
-      >
-        <component :is="getIcon(sub.icono)" class="w-4 h-4 shrink-0" />
-        <span>{{ sub.nombre }}</span>
-      </Link>
+      <div class="p-1 space-y-0.5">
+        <Link
+          v-for="sub in flyoutItem.children"
+          :key="sub.route"
+          :href="buildUrl(sub.path)"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-150 cursor-pointer"
+          :class="isUrlActive(sub.path)
+            ? 'bg-[#D1FAE5] text-[#0F766E] font-bold'
+            : 'text-gray-700 hover:text-[#0F766E] hover:bg-[#F0FDF9]'"
+        >
+          <component :is="getIcon(sub.icon)" class="w-3.5 h-3.5 shrink-0" />
+          <span>{{ sub.label }}</span>
+        </Link>
+      </div>
     </div>
   </aside>
 </template>
@@ -142,6 +199,7 @@
 import { computed, ref, onMounted, watch } from 'vue';
 import { usePage, Link } from '@inertiajs/vue3';
 import * as Lucide from '@lucide/vue';
+import { getNavForRole } from '@/config/navigation';
 
 const baseUrl = import.meta.env.VITE_BASE_URL || '';
 const buildUrl = (path) => {
@@ -152,22 +210,12 @@ const buildUrl = (path) => {
 };
 
 const page = usePage();
-const auth = computed(() => page.props.auth);
-//const menuItems = computed(() => page.props.menuItems || []);
-////desde aqui
+const auth = computed(() => page.props.auth || {});
 
-const hiddenItems = [
-  'Mensualidades',
-  'Seguimiento',
-  'Reportes',
-  'Aulas',
-  'Bitácora'
-];
-
+// ─── Opciones de menú obtenidas desde la configuración estática navigation.js ───
 const menuItems = computed(() => {
-  const items = page.props.menuItems || [];
-
-  return items.filter(item => !hiddenItems.includes(item.nombre));
+  const rol = auth.value?.rol || '';
+  return getNavForRole(rol);
 });
 
 // ─── Collapse state ─────────────────────────────────────────────────────────
@@ -223,8 +271,8 @@ function closeFlyout() {
 // ─── Open group tracking ────────────────────────────────────────────────────
 const openGroups = ref({});
 
-const toggleGroup = (id) => {
-  openGroups.value[id] = !openGroups.value[id];
+const toggleGroup = (key) => {
+  openGroups.value[key] = !openGroups.value[key];
 };
 
 const getIcon = (name) => {
@@ -232,14 +280,15 @@ const getIcon = (name) => {
 };
 
 const isUrlActive = (url) => {
+  if (!url) return false;
   const fullUrl = buildUrl(url);
-  return page.url === fullUrl || page.url.startsWith(fullUrl + '/');
+  return page.url === fullUrl || page.url.startsWith(fullUrl + '/') || page.url.startsWith(fullUrl + '?');
 };
 
 const isGroupActive = (item) => {
-  if (isUrlActive(item.ruta)) return true;
-  if (item.hijos) {
-    return item.hijos.some(subItem => isUrlActive(subItem.ruta));
+  if (item.path && isUrlActive(item.path)) return true;
+  if (item.children) {
+    return item.children.some(subItem => isUrlActive(subItem.path));
   }
   return false;
 };
@@ -248,8 +297,8 @@ const isGroupActive = (item) => {
 onMounted(() => {
   if (!collapsed.value) {
     menuItems.value.forEach(item => {
-      if (item.hijos && item.hijos.length > 0 && isGroupActive(item)) {
-        openGroups.value[item.id] = true;
+      if (item.children && item.children.length > 0 && isGroupActive(item)) {
+        openGroups.value[item.label] = true;
       }
     });
   }

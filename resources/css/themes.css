@@ -1,170 +1,174 @@
-/* ── Default / Fallback (Adultos-Día) ──────────────────────────── */
+/* ── Default / Fallback: PALETA NOTA MENTA (Scala Musical) ──────────────────────────── */
 :root {
-  --color-primary: #1D3557;
-  --color-secondary: #A8DADC;
-  --font-size-base: 18px;
+  --color-primary: #14B8A6;          /* Turquesa */
+  --color-secondary: #6EE7B7;        /* Menta */
+  --color-mint: #6EE7B7;             /* Menta vibrante */
+  --color-turquoise: #14B8A6;        /* Turquesa principal */
+  --color-mint-soft: #D1FAE5;        /* Menta suave */
+  --color-teal-dark: #0F766E;        /* Verde azulado para texto activo */
+  --font-size-base: 15px;
 
-  /* Layout */
+  /* Layout Nota Menta Claro */
   --h-header: 64px;
-  --bg-page: #F0F2F5;
-  --bg-surface: #FFFFFF;
-  --bg-header: #FFFFFF;
-  --bg-sidebar: #1E293B;
+  --bg-page: #F8FFFD;                /* Fondo principal solicitado */
+  --bg-surface: #FFFFFF;             /* Tarjetas y modales */
+  --bg-header: #FFFFFF;              /* Encabezado */
+  --bg-sidebar: #FFFFFF;             /* Sidebar completamente claro */
 
-  /* Text */
-  --text-body: #1F2937;
-  --text-muted: #5E6470;
-  --text-sidebar: #94A3B8;
-  --text-sidebar-active: #FFFFFF;
-  --text-sidebar-heading: #FFFFFF;
+  /* Textos */
+  --text-body: #1F2937;              /* Texto principal */
+  --text-muted: #6B7280;             /* Texto secundario */
+  --text-sidebar: #4B5563;           /* Enlaces sidebar inactivos */
+  --text-sidebar-active: #0F766E;    /* Enlaces sidebar activos */
+  --text-sidebar-heading: #0F766E;
 
-  /* Borders */
-  --border-light: #E5E7EB;
-  --border-sidebar: #334155;
-  --border-sidebar-inner: #374151;
+  /* Bordes */
+  --border-light: #DDEFEA;           /* Bordes Nota Menta */
+  --border-sidebar: #DDEFEA;
+  --border-sidebar-inner: #DDEFEA;
 
   /* Sidebar extras */
-  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
-  --bg-sidebar-active: rgba(255, 255, 255, 0.08);
-  --bg-sidebar-avatar: #334155;
+  --bg-sidebar-hover: #F0FDF9;
+  --bg-sidebar-active: #D1FAE5;      /* Opción activa en menta suave */
+  --bg-sidebar-avatar: #14B8A6;
 }
 
-/* Aplica font-size base en <html> para que rem escale completo */
+/* Aplica font-size base en <html> */
 html {
   font-size: var(--font-size-base);
 }
 
 /* ══════════════════════════════════════════════════════════════
-   ADULTOS — Formal, legible, profesional
+   ADULTOS / DEFAULT — Nota Menta Profesional & Juvenil
    ══════════════════════════════════════════════════════════════ */
 [data-tema="adultos-dia"] {
-  --color-primary: #1D3557;
-  --color-secondary: #A8DADC;
-  --font-size-base: 18px;
-  --bg-page: #F0F2F5;
+  --color-primary: #14B8A6;
+  --color-secondary: #6EE7B7;
+  --font-size-base: 15px;
+  --bg-page: #F8FFFD;
   --bg-surface: #FFFFFF;
   --bg-header: #FFFFFF;
-  --bg-sidebar: #1E293B;
+  --bg-sidebar: #FFFFFF;
   --text-body: #1F2937;
-  --text-muted: #5E6470;    /* AA 4.6:1 sobre bg-page */
-  --text-sidebar: #94A3B8;
-  --text-sidebar-active: #FFFFFF;
-  --text-sidebar-heading: #FFFFFF;
-  --border-light: #E5E7EB;
-  --border-sidebar: #334155;
-  --border-sidebar-inner: #374151;
-  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
-  --bg-sidebar-active: rgba(255, 255, 255, 0.10);
-  --bg-sidebar-avatar: #334155;
+  --text-muted: #6B7280;
+  --text-sidebar: #4B5563;
+  --text-sidebar-active: #0F766E;
+  --text-sidebar-heading: #0F766E;
+  --border-light: #DDEFEA;
+  --border-sidebar: #DDEFEA;
+  --border-sidebar-inner: #DDEFEA;
+  --bg-sidebar-hover: #F0FDF9;
+  --bg-sidebar-active: #D1FAE5;
+  --bg-sidebar-avatar: #14B8A6;
 }
 
 [data-tema="adultos-noche"] {
-  --color-primary: #60A5FA;
-  --color-secondary: #1E3A5F;
-  --font-size-base: 18px;
-  --bg-page: #0F172A;
-  --bg-surface: #1E293B;
-  --bg-header: #1E293B;
-  --bg-sidebar: #020617;
-  --text-body: #F1F5F9;
-  --text-muted: #A0AEC0;    /* AA 7.4:1 sobre bg-page */
-  --text-sidebar: #94A3B8;
-  --text-sidebar-active: #FFFFFF;
-  --text-sidebar-heading: #6CB4EE;
-  --border-light: #334155;
-  --border-sidebar: #1E293B;
-  --border-sidebar-inner: #1E293B;
-  --bg-sidebar-hover: rgba(255, 255, 255, 0.04);
-  --bg-sidebar-active: rgba(255, 255, 255, 0.08);
-  --bg-sidebar-avatar: #1E293B;
+  --color-primary: #2DD4BF;
+  --color-secondary: #0F766E;
+  --font-size-base: 15px;
+  --bg-page: #0D1F1B;
+  --bg-surface: #132E28;
+  --bg-header: #132E28;
+  --bg-sidebar: #0B1C18;
+  --text-body: #F1FDF9;
+  --text-muted: #86A89F;
+  --text-sidebar: #86A89F;
+  --text-sidebar-active: #5EEAD4;
+  --text-sidebar-heading: #5EEAD4;
+  --border-light: #1D423A;
+  --border-sidebar: #1D423A;
+  --border-sidebar-inner: #1D423A;
+  --bg-sidebar-hover: rgba(45, 212, 191, 0.08);
+  --bg-sidebar-active: rgba(45, 212, 191, 0.16);
+  --bg-sidebar-avatar: #14B8A6;
 }
 
 /* ══════════════════════════════════════════════════════════════
-   JÓVENES — Vibrante, moderno, creativo
+   JÓVENES — Menta Creativa Vibrante
    ══════════════════════════════════════════════════════════════ */
 [data-tema="jovenes-dia"] {
-  --color-primary: #554DD6;  /* AA 4.6:1 sobre blanco (antes #6C63FF = 4.3:1 ❌) */
-  --color-secondary: #E8E7FF;
-  --font-size-base: 16px;
-  --bg-page: #F5F3FF;
+  --color-primary: #0D9488;
+  --color-secondary: #5EEAD4;
+  --font-size-base: 15px;
+  --bg-page: #F6FEFC;
   --bg-surface: #FFFFFF;
   --bg-header: #FFFFFF;
-  --bg-sidebar: #2D2B55;
+  --bg-sidebar: #FFFFFF;
   --text-body: #1F2937;
-  --text-muted: #615E85;    /* AA 4.5:1 sobre blanco (antes #7C7AA6 = 3.5:1 ❌) */
-  --text-sidebar: #B0AED6;
-  --text-sidebar-active: #FFFFFF;
-  --text-sidebar-heading: #FFFFFF;
-  --border-light: #E0DFF5;
-  --border-sidebar: #3D3B6B;
-  --border-sidebar-inner: #4A4880;
-  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
-  --bg-sidebar-active: rgba(108, 99, 255, 0.20);
-  --bg-sidebar-avatar: #3D3B6B;
+  --text-muted: #6B7280;
+  --text-sidebar: #4B5563;
+  --text-sidebar-active: #0F766E;
+  --text-sidebar-heading: #0F766E;
+  --border-light: #CCFBF1;
+  --border-sidebar: #DDEFEA;
+  --border-sidebar-inner: #DDEFEA;
+  --bg-sidebar-hover: #F0FDF9;
+  --bg-sidebar-active: #D1FAE5;
+  --bg-sidebar-avatar: #0D9488;
 }
 
 [data-tema="jovenes-noche"] {
-  --color-primary: #8B83FF;
-  --color-secondary: #2D2B55;
-  --font-size-base: 16px;
-  --bg-page: #1A1735;
-  --bg-surface: #2D2B55;
-  --bg-header: #2D2B55;
-  --bg-sidebar: #100E26;
-  --text-body: #E0DFF5;
-  --text-muted: #A5A0C8;    /* AA 5.6:1 sobre bg-surface (antes #7C7AA6 = 3.2:1 ❌) */
-  --text-sidebar: #A5A0C8;
+  --color-primary: #5EEAD4;
+  --color-secondary: #134E4A;
+  --font-size-base: 15px;
+  --bg-page: #081C19;
+  --bg-surface: #102F2A;
+  --bg-header: #102F2A;
+  --bg-sidebar: #081C19;
+  --text-body: #ECFDF5;
+  --text-muted: #99F6E4;
+  --text-sidebar: #99F6E4;
   --text-sidebar-active: #FFFFFF;
-  --text-sidebar-heading: #A5A0FF;
-  --border-light: #3D3B6B;
-  --border-sidebar: #2D2B55;
-  --border-sidebar-inner: #3D3B6B;
-  --bg-sidebar-hover: rgba(255, 255, 255, 0.05);
-  --bg-sidebar-active: rgba(108, 99, 255, 0.25);
-  --bg-sidebar-avatar: #3D3B6B;
+  --text-sidebar-heading: #5EEAD4;
+  --border-light: #164E44;
+  --border-sidebar: #164E44;
+  --border-sidebar-inner: #164E44;
+  --bg-sidebar-hover: rgba(94, 234, 212, 0.08);
+  --bg-sidebar-active: rgba(94, 234, 212, 0.18);
+  --bg-sidebar-avatar: #134E4A;
 }
 
 /* ══════════════════════════════════════════════════════════════
-   NIÑOS — Cálido, divertido, amigable
+   NIÑOS — Cálido, alegre y lúdico
    ══════════════════════════════════════════════════════════════ */
 [data-tema="ninos-dia"] {
-  --color-primary: #D1453A;  /* AA 4.5:1 sobre blanco (antes #FF6F61 = 2.7:1 ❌❌) */
-  --color-secondary: #FFE5D9;
-  --font-size-base: 14px;
-  --bg-page: #FFF5F3;
+  --color-primary: #10B981;
+  --color-secondary: #A7F3D0;
+  --font-size-base: 15px;
+  --bg-page: #F7FEFA;
   --bg-surface: #FFFFFF;
   --bg-header: #FFFFFF;
-  --bg-sidebar: #A8362D;    /* AA 4.9:1 con --text-sidebar */
+  --bg-sidebar: #FFFFFF;
   --text-body: #1F2937;
-  --text-muted: #8C6B63;    /* AA 4.7:1 sobre blanco (antes #B08982 = 2.95:1 ❌❌) */
-  --text-sidebar: #FFD5CC;
-  --text-sidebar-active: #FFFFFF;
-  --text-sidebar-heading: #FFFFFF;
-  --border-light: #FFE0DA;
-  --border-sidebar: #962D24;
-  --border-sidebar-inner: #8A2820;
-  --bg-sidebar-hover: rgba(255, 255, 255, 0.12);
-  --bg-sidebar-active: rgba(255, 255, 255, 0.20);
-  --bg-sidebar-avatar: #962D24;
+  --text-muted: #6B7280;
+  --text-sidebar: #4B5563;
+  --text-sidebar-active: #047857;
+  --text-sidebar-heading: #047857;
+  --border-light: #D1FAE5;
+  --border-sidebar: #DDEFEA;
+  --border-sidebar-inner: #DDEFEA;
+  --bg-sidebar-hover: #ECFDF5;
+  --bg-sidebar-active: #D1FAE5;
+  --bg-sidebar-avatar: #10B981;
 }
 
 [data-tema="ninos-noche"] {
-  --color-primary: #FF8A7A;
-  --color-secondary: #5C2018;
-  --font-size-base: 14px;
-  --bg-page: #2D1512;
-  --bg-surface: #3D201C;
-  --bg-header: #3D201C;
-  --bg-sidebar: #1A0C0A;
-  --text-body: #FEE2E2;
-  --text-muted: #C4A69E;    /* AA 7.1:1 sobre bg-surface (antes #B08982 = 4.1:1 ❌) */
-  --text-sidebar: #C4A69E;
+  --color-primary: #6EE7B7;
+  --color-secondary: #064E3B;
+  --font-size-base: 15px;
+  --bg-page: #061A14;
+  --bg-surface: #0E3328;
+  --bg-header: #0E3328;
+  --bg-sidebar: #061A14;
+  --text-body: #ECFDF5;
+  --text-muted: #A7F3D0;
+  --text-sidebar: #A7F3D0;
   --text-sidebar-active: #FFFFFF;
-  --text-sidebar-heading: #FF8A7A;
-  --border-light: #5C2018;
-  --border-sidebar: #3D201C;
-  --border-sidebar-inner: #5C2018;
-  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
-  --bg-sidebar-active: rgba(255, 143, 128, 0.20);
-  --bg-sidebar-avatar: #3D201C;
+  --text-sidebar-heading: #6EE7B7;
+  --border-light: #164E3D;
+  --border-sidebar: #164E3D;
+  --border-sidebar-inner: #164E3D;
+  --bg-sidebar-hover: rgba(110, 231, 183, 0.08);
+  --bg-sidebar-active: rgba(110, 231, 183, 0.18);
+  --bg-sidebar-avatar: #064E3B;
 }
