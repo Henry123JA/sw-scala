@@ -4,6 +4,13 @@
  */
 export const navigation = [
   {
+    label: 'Asistencia',
+    route: 'asistencias.index',
+    path: '/asistencias',
+    icon: 'UserCheck',
+    roles: ['Propietario', 'Secretaria', 'Docente']
+  },
+  {
     label: 'Dashboard',
     route: 'dashboard',
     path: '/dashboard',

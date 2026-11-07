@@ -11,12 +11,19 @@ use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AsistenciaController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
 Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
+    Route::middleware('role:Propietario,Secretaria,Docente')->group(function () {
+        Route::get('/asistencias', [AsistenciaController::class, 'index'])->name('asistencias.index');
+        Route::post('/asistencias/sesion', [AsistenciaController::class, 'seleccionar'])->name('asistencias.seleccionar');
+        Route::get('/asistencias/{sesion}', [AsistenciaController::class, 'show'])->whereNumber('sesion')->name('asistencias.show');
+        Route::put('/asistencias/{sesion}', [AsistenciaController::class, 'guardar'])->whereNumber('sesion')->name('asistencias.guardar');
+    });
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/perfil', [PerfilController::class, 'index'])->name('perfil.index');
