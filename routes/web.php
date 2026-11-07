@@ -18,8 +18,12 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
+    // ── Gestión y Consulta de Asistencias — HU8 ─────────────────────────────
+    // El index es accesible por todos los roles autenticados (los alumnos ven su propio historial)
+    Route::get('/asistencias', [AsistenciaController::class, 'index'])->name('asistencias.index');
+
+    // La toma y guardado de asistencias está restringido a Propietario, Secretaria y Docente
     Route::middleware('role:Propietario,Secretaria,Docente')->group(function () {
-        Route::get('/asistencias', [AsistenciaController::class, 'index'])->name('asistencias.index');
         Route::post('/asistencias/sesion', [AsistenciaController::class, 'seleccionar'])->name('asistencias.seleccionar');
         Route::get('/asistencias/{sesion}', [AsistenciaController::class, 'show'])->whereNumber('sesion')->name('asistencias.show');
         Route::put('/asistencias/{sesion}', [AsistenciaController::class, 'guardar'])->whereNumber('sesion')->name('asistencias.guardar');

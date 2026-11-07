@@ -16,7 +16,19 @@ class AsistenciaController extends Controller
 
     public function index(Request $request): Response
     {
-        return Inertia::render('Asistencia/Index', ['grupos' => $this->service->listarGrupos($request->user())]);
+        $user = $request->user();
+
+        // Si el usuario autenticado tiene el rol Alumno, mostramos exclusivamente su vista personal
+        if ($user->rol?->nombre === 'Alumno') {
+            return Inertia::render('Asistencia/Index', $this->service->obtenerAsistenciasAlumno($user));
+        }
+
+        // Si es Docente, Secretaria o Propietario, mostramos las tarjetas de grupos para gestión y toma de asistencia
+        return Inertia::render('Asistencia/Index', [
+            'es_alumno' => false,
+            'grupos' => $this->service->listarGrupos($user),
+            'rol_usuario' => $user->rol?->nombre,
+        ]);
     }
 
     public function seleccionar(SeleccionarSesionRequest $request): RedirectResponse
@@ -35,6 +47,6 @@ class AsistenciaController extends Controller
     {
         $this->service->guardar($sesion, $request->validated()['asistencias'], $request->user());
 
-        return to_route('asistencias.show', $sesion)->with('success', 'Asistencia guardada correctamente.');
+        return to_route('asistencias.index')->with('success', 'Asistencia registrada correctamente.');
     }
 }

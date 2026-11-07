@@ -13,11 +13,51 @@ use Illuminate\Validation\ValidationException;
 
 class AsistenciaService
 {
-    public function listarGrupos(Usuario $usuario): Collection
+    /**
+     * Lista los grupos disponibles para gestión de asistencia con información para las tarjetas.
+     * Docente: solo sus grupos asignados.
+     * Propietario / Secretaria: todos los grupos de la academia.
+     * Incluye si ya se tomó asistencia para la fecha de hoy.
+     */
+    public function listarGrupos(Usuario $usuario, ?string $fecha = null): Collection
     {
-        return Grupo::with('curso')
-            ->when($usuario->rol->nombre === 'Docente', fn ($q) => $q->where('docente_id', $usuario->id))
-            ->orderBy('codigo_grupo')->get();
+        $fechaConsulta = $fecha ?? now()->toDateString();
+
+        $grupos = Grupo::with([
+                'curso',
+                'docente.usuario:id,nombres,apellidos',
+                'horarios.sala',
+            ])
+            ->withCount(['inscripciones as alumnos_inscritos' => function ($q) {
+                $q->where('estado', 'ACTIVA');
+            }])
+            ->when($usuario->rol?->nombre === 'Docente', fn ($q) => $q->where('docente_id', $usuario->id))
+            ->orderBy('codigo_grupo')
+            ->get();
+
+        // Obtener sesiones de la fecha para determinar si ya se tomó asistencia
+        $grupoIds = $grupos->pluck('id');
+        $sesionesHoy = SesionClase::whereIn('grupo_id', $grupoIds)
+            ->whereDate('fecha', $fechaConsulta)
+            ->get()
+            ->keyBy('grupo_id');
+
+        $sesionesConAsistencias = Asistencia::whereIn('sesion_clase_id', $sesionesHoy->pluck('id'))
+            ->select('sesion_clase_id', DB::raw('count(*) as total'))
+            ->groupBy('sesion_clase_id')
+            ->pluck('total', 'sesion_clase_id');
+
+        return $grupos->map(function ($grupo) use ($sesionesHoy, $sesionesConAsistencias) {
+            $sesion = $sesionesHoy->get($grupo->id);
+            $totalMarcados = $sesion ? ($sesionesConAsistencias->get($sesion->id) ?? 0) : 0;
+            $asistenciaTomadaHoy = $totalMarcados > 0;
+
+            $grupo->asistencia_hoy_tomada = $asistenciaTomadaHoy;
+            $grupo->sesion_hoy_id = $sesion?->id;
+            $grupo->alumnos_marcados_hoy = $totalMarcados;
+
+            return $grupo;
+        });
     }
 
     private function autorizarGrupo(Grupo $grupo, Usuario $usuario): void
@@ -86,5 +126,78 @@ class AsistenciaService
             ], $asistencias);
             Asistencia::upsert($filas, ['sesion_clase_id', 'inscripcion_id'], ['estado', 'observacion', 'updated_at']);
         });
+    }
+
+    /**
+     * Obtiene el historial personal de asistencias de un alumno autenticado.
+     * Solo devuelve las asistencias correspondientes a sus propias inscripciones.
+     */
+    public function obtenerAsistenciasAlumno(Usuario $usuario): array
+    {
+        $inscripciones = Inscripcion::with([
+                'grupo.curso',
+                'grupo.docente.usuario:id,nombres,apellidos',
+            ])
+            ->where('alumno_id', $usuario->id)
+            ->get();
+
+        $inscripcionIds = $inscripciones->pluck('id');
+
+        $registros = Asistencia::with('sesionClase.grupo.curso')
+            ->whereIn('inscripcion_id', $inscripcionIds)
+            ->join('sesion_clase', 'asistencia.sesion_clase_id', '=', 'sesion_clase.id')
+            ->select('asistencia.*')
+            ->orderByDesc('sesion_clase.fecha')
+            ->get();
+
+        // Calcular resumen y métricas por cada curso en el que está o estuvo inscrito
+        $resumenCursos = $inscripciones->map(function ($inscripcion) use ($registros) {
+            $misAsistenciasCurso = $registros->where('inscripcion_id', $inscripcion->id);
+            $totalClases = $misAsistenciasCurso->count();
+            $presentes = $misAsistenciasCurso->where('estado', 'PRESENTE')->count();
+            $faltas = $misAsistenciasCurso->where('estado', 'FALTA')->count();
+            $licencias = $misAsistenciasCurso->where('estado', 'LICENCIA')->count();
+            $atrasos = $misAsistenciasCurso->where('estado', 'ATRASO')->count();
+
+            $porcentajeAsistencia = $totalClases > 0 
+                ? round((($presentes + ($atrasos * 0.8)) / $totalClases) * 100, 1) 
+                : 100.0;
+
+            $docentePersona = $inscripcion->grupo?->docente?->usuario;
+
+            return [
+                'inscripcion_id' => $inscripcion->id,
+                'codigo_grupo' => $inscripcion->grupo?->codigo_grupo ?? 'N/A',
+                'curso' => $inscripcion->grupo?->curso?->nombre ?? 'Curso',
+                'docente' => $docentePersona ? trim($docentePersona->nombres . ' ' . $docentePersona->apellidos) : 'Sin asignar',
+                'estado_inscripcion' => $inscripcion->estado,
+                'total_clases' => $totalClases,
+                'presentes' => $presentes,
+                'faltas' => $faltas,
+                'licencias' => $licencias,
+                'atrasos' => $atrasos,
+                'porcentaje' => $porcentajeAsistencia,
+            ];
+        })->values();
+
+        // Historial detallado ordenado cronológicamente
+        $historial = $registros->map(function ($asistencia) {
+            $sesion = $asistencia->sesionClase;
+            $grupo = $sesion?->grupo;
+            return [
+                'id' => $asistencia->id,
+                'fecha' => $sesion?->fecha,
+                'curso' => $grupo?->curso?->nombre ?? 'Curso',
+                'codigo_grupo' => $grupo?->codigo_grupo ?? 'N/A',
+                'estado' => $asistencia->estado,
+                'observacion' => $asistencia->observacion,
+            ];
+        })->values();
+
+        return [
+            'es_alumno' => true,
+            'resumen_cursos' => $resumenCursos,
+            'historial' => $historial,
+        ];
     }
 }

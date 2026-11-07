@@ -8,7 +8,7 @@ export const navigation = [
     route: 'asistencias.index',
     path: '/asistencias',
     icon: 'UserCheck',
-    roles: ['Propietario', 'Secretaria', 'Docente']
+    roles: ['Propietario', 'Secretaria', 'Docente', 'Alumno']
   },
   {
     label: 'Dashboard',
