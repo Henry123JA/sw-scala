@@ -53,6 +53,16 @@ class Grupo extends Model
         return $this->hasMany(HorarioGrupo::class, 'grupo_id');
     }
 
+    public function evaluaciones(): HasMany
+    {
+        return $this->hasMany(Evaluacion::class, 'grupo_id');
+    }
+
+    public function sesionesClase(): HasMany
+    {
+        return $this->hasMany(SesionClase::class, 'grupo_id');
+    }
+
     public function softDelete(): void
     {
         $this->update(['eliminado' => true]);

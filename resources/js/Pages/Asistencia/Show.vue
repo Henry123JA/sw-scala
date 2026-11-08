@@ -18,6 +18,41 @@ const estados = {
   ATRASO: { label: 'Atraso', icon: 'Clock', color: 'text-amber-700 bg-amber-50 border-amber-300' },
 };
 
+function getInscripcionBadge(estado) {
+  switch (estado) {
+    case 'ACTIVA':
+      return {
+        label: 'Activa',
+        badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        icon: null,
+      };
+    case 'PAUSADA':
+      return {
+        label: 'Inscripción Pausada',
+        badgeClass: 'bg-amber-100 text-amber-800 border-amber-300 font-bold',
+        icon: 'AlertTriangle',
+        alertMsg: 'Inscripción en pausa académica. Verifique la situación del alumno antes de registrar su asistencia.',
+        alertClass: 'bg-amber-50 text-amber-800 border-amber-200',
+      };
+    case 'CANCELADA':
+      return {
+        label: 'Inscripción Cancelada',
+        badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
+        icon: 'AlertCircle',
+        alertMsg: 'Inscripción cancelada / alumno retirado del grupo.',
+        alertClass: 'bg-rose-50 text-rose-700 border-rose-200',
+      };
+    default:
+      return {
+        label: estado || 'Inactiva',
+        badgeClass: 'bg-gray-100 text-gray-700 border-gray-300 font-medium',
+        icon: 'AlertCircle',
+        alertMsg: `Inscripción en estado ${estado || 'inactiva'}.`,
+        alertClass: 'bg-gray-50 text-gray-700 border-gray-200',
+      };
+  }
+}
+
 const form = useForm({
   asistencias: props.alumnos.map(alumno => ({
     inscripcion_id: alumno.inscripcion_id,
@@ -111,14 +146,57 @@ function marcarTodos(estado) {
                 <tr
                   v-for="(alumno, index) in alumnos"
                   :key="alumno.inscripcion_id"
-                  class="hover:bg-[#F0FDF9] transition-colors"
+                  class="transition-colors"
+                  :class="[
+                    alumno.estado_inscripcion === 'PAUSADA' ? 'bg-amber-50/40 hover:bg-amber-50/60' :
+                    alumno.estado_inscripcion === 'CANCELADA' ? 'bg-rose-50/40 hover:bg-rose-50/60' :
+                    alumno.estado_inscripcion !== 'ACTIVA' ? 'bg-gray-50/60 hover:bg-gray-100/60' :
+                    'hover:bg-[#F0FDF9]'
+                  ]"
                 >
                   <!-- Columna Estudiante -->
-                  <td class="p-3.5">
+                  <td class="p-3.5 align-top">
                     <div class="font-bold text-gray-900">{{ alumno.nombre }}</div>
-                    <span class="text-[11px] text-gray-400 font-medium">
-                      Inscripción #{{ alumno.inscripcion_id }} • Estado: {{ alumno.estado_inscripcion }}
-                    </span>
+
+                    <!-- Fila de metadatos y badge de inscripción -->
+                    <div class="mt-1 flex items-center gap-2 flex-wrap">
+                      <span class="text-[11px] text-gray-400 font-mono font-medium">
+                        #{{ alumno.inscripcion_id }}
+                      </span>
+
+                      <!-- Badge según estado de la inscripción -->
+                      <span
+                        v-if="alumno.estado_inscripcion === 'ACTIVA'"
+                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      >
+                        Activa
+                      </span>
+                      <span
+                        v-else
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border shadow-xs"
+                        :class="getInscripcionBadge(alumno.estado_inscripcion).badgeClass"
+                      >
+                        <component
+                          :is="Lucide[getInscripcionBadge(alumno.estado_inscripcion).icon] || Lucide.AlertTriangle"
+                          class="w-3 h-3 shrink-0"
+                        />
+                        {{ getInscripcionBadge(alumno.estado_inscripcion).label }}
+                      </span>
+                    </div>
+
+                    <!-- Alerta visual destacada si la inscripción NO está activa (ej: PAUSADA o CANCELADA) -->
+                    <div
+                      v-if="alumno.estado_inscripcion && alumno.estado_inscripcion !== 'ACTIVA'"
+                      class="mt-2 flex items-start gap-1.5 p-2 rounded-lg text-xs font-medium border"
+                      :class="getInscripcionBadge(alumno.estado_inscripcion).alertClass"
+                    >
+                      <component
+                        :is="Lucide[getInscripcionBadge(alumno.estado_inscripcion).icon] || Lucide.AlertTriangle"
+                        class="w-3.5 h-3.5 shrink-0 mt-0.5"
+                      />
+                      <span>{{ getInscripcionBadge(alumno.estado_inscripcion).alertMsg }}</span>
+                    </div>
+
                     <p v-if="form.errors[`asistencias.${index}.inscripcion_id`]" class="text-xs text-rose-600 mt-1">
                       {{ form.errors[`asistencias.${index}.inscripcion_id`] }}
                     </p>

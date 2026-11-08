@@ -38,6 +38,11 @@ class AsistenciaController extends Controller
         return to_route('asistencias.show', $sesion->id);
     }
 
+    public function historialGrupo(Request $request, int $grupo): Response
+    {
+        return Inertia::render('Asistencia/HistorialGrupo', $this->service->obtenerHistorialGrupo($grupo, $request->user()));
+    }
+
     public function show(Request $request, int $sesion): Response
     {
         return Inertia::render('Asistencia/Show', $this->service->listarAlumnos($sesion, $request->user()));

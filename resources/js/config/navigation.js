@@ -11,6 +11,13 @@ export const navigation = [
     roles: ['Propietario', 'Secretaria', 'Docente', 'Alumno']
   },
   {
+    label: 'Evaluaciones',
+    route: 'evaluaciones.index',
+    path: '/evaluaciones',
+    icon: 'Award',
+    roles: ['Propietario', 'Secretaria', 'Docente', 'Alumno']
+  },
+  {
     label: 'Dashboard',
     route: 'dashboard',
     path: '/dashboard',

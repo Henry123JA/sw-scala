@@ -367,6 +367,15 @@ function getBadgeClass(estado) {
               >
                 <component :is="Lucide.Calendar" class="w-4 h-4" />
               </button>
+
+              <!-- Botón para ver historial de asistencias de este grupo -->
+              <Link
+                :href="`${base}/asistencias/grupos/${grupo.id}/historial`"
+                class="btn-menta-outline text-xs px-2.5 py-2 text-[#0F766E] hover:bg-[#D1FAE5]"
+                title="Ver historial de asistencias de este grupo"
+              >
+                <component :is="Lucide.History" class="w-4 h-4" />
+              </Link>
             </div>
           </div>
         </div>

@@ -200,4 +200,113 @@ class AsistenciaService
             'historial' => $historial,
         ];
     }
+
+    /**
+     * Obtiene el historial de sesiones y asistencias para un grupo específico.
+     * Operativa diaria para Docente y Admin.
+     */
+    public function obtenerHistorialGrupo(int $grupoId, Usuario $usuario): array
+    {
+        $grupo = Grupo::with([
+                'curso',
+                'docente.usuario:id,nombres,apellidos',
+                'horarios.sala',
+            ])
+            ->withCount(['inscripciones as alumnos_inscritos' => function ($q) {
+                $q->where('estado', 'ACTIVA');
+            }])
+            ->findOrFail($grupoId);
+
+        $this->autorizarGrupo($grupo, $usuario);
+
+        $sesiones = SesionClase::where('grupo_id', $grupo->id)
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
+            ->get();
+
+        $sesionIds = $sesiones->pluck('id');
+
+        // Conteos por estado en cada sesión
+        $conteos = Asistencia::whereIn('sesion_clase_id', $sesionIds)
+            ->select('sesion_clase_id', 'estado', DB::raw('count(*) as total'))
+            ->groupBy('sesion_clase_id', 'estado')
+            ->get();
+
+        $agrupados = [];
+        foreach ($conteos as $c) {
+            $agrupados[$c->sesion_clase_id][$c->estado] = (int) $c->total;
+        }
+
+        $sesionesHistorial = $sesiones->map(function ($sesion) use ($agrupados) {
+            $estados = $agrupados[$sesion->id] ?? [];
+            $presentes = $estados['PRESENTE'] ?? 0;
+            $faltas = $estados['FALTA'] ?? 0;
+            $licencias = $estados['LICENCIA'] ?? 0;
+            $atrasos = $estados['ATRASO'] ?? 0;
+            $totalCalificados = $presentes + $faltas + $licencias + $atrasos;
+
+            $porcentajeAsistencia = $totalCalificados > 0
+                ? round((($presentes + ($atrasos * 0.8)) / $totalCalificados) * 100, 1)
+                : 0.0;
+
+            return [
+                'id' => $sesion->id,
+                'fecha' => $sesion->fecha?->format('Y-m-d') ?? (string) $sesion->fecha,
+                'presentes' => $presentes,
+                'faltas' => $faltas,
+                'licencias' => $licencias,
+                'atrasos' => $atrasos,
+                'total_calificados' => $totalCalificados,
+                'porcentaje_asistencia' => $porcentajeAsistencia,
+            ];
+        })->values();
+
+        // Resumen acumulado global del grupo para tarjetas KPI
+        $totalSesiones = $sesionesHistorial->count();
+        $totalPresentes = $sesionesHistorial->sum('presentes');
+        $totalFaltas = $sesionesHistorial->sum('faltas');
+        $totalLicencias = $sesionesHistorial->sum('licencias');
+        $totalAtrasos = $sesionesHistorial->sum('atrasos');
+        $granTotalCalificados = $totalPresentes + $totalFaltas + $totalLicencias + $totalAtrasos;
+        $promedioAsistencia = $granTotalCalificados > 0
+            ? round((($totalPresentes + ($totalAtrasos * 0.8)) / $granTotalCalificados) * 100, 1)
+            : 0.0;
+
+        $docentePersona = $grupo->docente?->usuario;
+
+        return [
+            'grupo' => [
+                'id' => $grupo->id,
+                'codigo_grupo' => $grupo->codigo_grupo,
+                'nivel' => $grupo->nivel,
+                'capacidad_maxima' => $grupo->capacidad_maxima,
+                'alumnos_inscritos' => $grupo->alumnos_inscritos ?? 0,
+                'curso' => [
+                    'id' => $grupo->curso?->id,
+                    'nombre' => $grupo->curso?->nombre ?? 'Curso',
+                ],
+                'docente' => $docentePersona ? [
+                    'id' => $docentePersona->id,
+                    'nombre_completo' => trim($docentePersona->nombres . ' ' . $docentePersona->apellidos),
+                ] : null,
+                'horarios' => $grupo->horarios->map(fn ($h) => [
+                    'id' => $h->id,
+                    'dia_semana' => $h->dia_semana,
+                    'hora_inicio' => substr($h->hora_inicio, 0, 5),
+                    'hora_fin' => substr($h->hora_fin, 0, 5),
+                    'sala' => $h->sala?->nombre ?? null,
+                ])->values(),
+            ],
+            'resumen' => [
+                'total_sesiones' => $totalSesiones,
+                'total_presentes' => $totalPresentes,
+                'total_faltas' => $totalFaltas,
+                'total_licencias' => $totalLicencias,
+                'total_atrasos' => $totalAtrasos,
+                'total_calificados' => $granTotalCalificados,
+                'promedio_asistencia' => $promedioAsistencia,
+            ],
+            'sesiones' => $sesionesHistorial,
+        ];
+    }
 }

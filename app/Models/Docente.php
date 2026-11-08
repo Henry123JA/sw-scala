@@ -59,4 +59,9 @@ class Docente extends Model
     {
         return $this->hasMany(HorarioDocente::class, 'docente_id');
     }
+
+    public function observacionesAcademicas(): HasMany
+    {
+        return $this->hasMany(ObservacionAcademica::class, 'docente_id');
+    }
 }

@@ -12,6 +12,8 @@ use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AsistenciaController;
+use App\Http\Controllers\EvaluacionController;
+use App\Http\Controllers\ObservacionAcademicaController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -24,9 +26,21 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
 
     // La toma y guardado de asistencias está restringido a Propietario, Secretaria y Docente
     Route::middleware('role:Propietario,Secretaria,Docente')->group(function () {
+        Route::get('/asistencias/grupos/{grupo}/historial', [AsistenciaController::class, 'historialGrupo'])->whereNumber('grupo')->name('asistencias.grupo.historial');
         Route::post('/asistencias/sesion', [AsistenciaController::class, 'seleccionar'])->name('asistencias.seleccionar');
         Route::get('/asistencias/{sesion}', [AsistenciaController::class, 'show'])->whereNumber('sesion')->name('asistencias.show');
         Route::put('/asistencias/{sesion}', [AsistenciaController::class, 'guardar'])->whereNumber('sesion')->name('asistencias.guardar');
+    });
+
+    // ── Gestión y Consulta de Evaluaciones y Calificaciones — HU10 ──────────
+    // El index es accesible por todos los roles autenticados (los alumnos ven su propia libreta)
+    Route::get('/evaluaciones', [EvaluacionController::class, 'index'])->name('evaluaciones.index');
+
+    // La creación de evaluaciones y el registro de calificaciones está restringido a Propietario, Secretaria y Docente
+    Route::middleware('role:Propietario,Secretaria,Docente')->group(function () {
+        Route::post('/evaluaciones/grupos/{grupo}', [EvaluacionController::class, 'store'])->whereNumber('grupo')->name('evaluaciones.store');
+        Route::get('/evaluaciones/{evaluacion}', [EvaluacionController::class, 'show'])->whereNumber('evaluacion')->name('evaluaciones.show');
+        Route::put('/evaluaciones/{evaluacion}', [EvaluacionController::class, 'guardar'])->whereNumber('evaluacion')->name('evaluaciones.guardar');
     });
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -119,6 +133,13 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
         Route::post('/inscripciones/{id}/pausar', [InscripcionController::class, 'pause'])->name('inscripciones.pause')->whereNumber('id');
         Route::post('/inscripciones/{id}/reanudar', [InscripcionController::class, 'resume'])->name('inscripciones.resume')->whereNumber('id');
         Route::post('/inscripciones/{id}/cancelar', [InscripcionController::class, 'cancel'])->name('inscripciones.cancel')->whereNumber('id');
+    });
+
+    // ── Observaciones Académicas — HU12 ──────────────────────────────────────
+    Route::get('/inscripciones/{inscripcion}/observaciones', [ObservacionAcademicaController::class, 'index'])->name('observaciones.index')->whereNumber('inscripcion');
+    Route::middleware(['role:Propietario,Secretaria,Docente'])->group(function () {
+        Route::post('/observaciones', [ObservacionAcademicaController::class, 'store'])->name('observaciones.store');
+        Route::delete('/observaciones/{observacion}', [ObservacionAcademicaController::class, 'destroy'])->name('observaciones.destroy')->whereNumber('observacion');
     });
 
     Route::middleware(['role:Propietario'])->group(function () {
