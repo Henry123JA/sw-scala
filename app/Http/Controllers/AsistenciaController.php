@@ -50,7 +50,8 @@ class AsistenciaController extends Controller
 
     public function guardar(GuardarAsistenciaRequest $request, int $sesion): RedirectResponse
     {
-        $this->service->guardar($sesion, $request->validated()['asistencias'], $request->user());
+        $asistencias = $request->input('asistencias');
+        $this->service->guardar($sesion, $asistencias, $request->user());
 
         return to_route('asistencias.index')->with('success', 'Asistencia registrada correctamente.');
     }

@@ -251,7 +251,8 @@ function getPorcentajeClass(pct) {
                 v-model="filtroFecha"
                 type="text"
                 placeholder="Filtrar por fecha..."
-                class="input-menta !pl-9 text-xs py-1.5"
+                class="input-menta text-xs py-1.5"
+                style="padding-left: 2.25rem !important;"
               />
               <component :is="Lucide.Search" class="w-4 h-4 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>

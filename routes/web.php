@@ -14,6 +14,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\EvaluacionController;
 use App\Http\Controllers\ObservacionAcademicaController;
+use App\Http\Controllers\ProgresoAcademicoController;
+use App\Http\Controllers\SeguimientoAcademicoController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -42,6 +44,17 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
         Route::get('/evaluaciones/{evaluacion}', [EvaluacionController::class, 'show'])->whereNumber('evaluacion')->name('evaluaciones.show');
         Route::put('/evaluaciones/{evaluacion}', [EvaluacionController::class, 'guardar'])->whereNumber('evaluacion')->name('evaluaciones.guardar');
     });
+
+    // ── Progreso Académico — HU11 ───────────────────────────────────────────
+    Route::get('/progreso', [ProgresoAcademicoController::class, 'index'])->name('progreso.index');
+    Route::middleware('role:Propietario,Secretaria,Docente')->group(function () {
+        Route::get('/progreso/grupos/{grupo}', [ProgresoAcademicoController::class, 'progresoGrupo'])->whereNumber('grupo')->name('progreso.grupo');
+        Route::get('/progreso/inscripciones/{inscripcion}', [ProgresoAcademicoController::class, 'progresoInscripcion'])->whereNumber('inscripcion')->name('progreso.inscripcion');
+    });
+
+    // ── Seguimiento Académico y Ficha Integral — HU13 ───────────────────────
+    Route::get('/seguimiento', [SeguimientoAcademicoController::class, 'index'])->name('seguimiento.index');
+    Route::get('/seguimiento/inscripciones/{inscripcion}', [SeguimientoAcademicoController::class, 'show'])->whereNumber('inscripcion')->name('seguimiento.show');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/perfil', [PerfilController::class, 'index'])->name('perfil.index');

@@ -18,6 +18,20 @@ export const navigation = [
     roles: ['Propietario', 'Secretaria', 'Docente', 'Alumno']
   },
   {
+    label: 'Progreso',
+    route: 'progreso.index',
+    path: '/progreso',
+    icon: 'TrendingUp',
+    roles: ['Propietario', 'Secretaria', 'Docente', 'Alumno']
+  },
+  {
+    label: 'Seguimiento',
+    route: 'seguimiento.index',
+    path: '/seguimiento',
+    icon: 'FileBadge',
+    roles: ['Propietario', 'Secretaria', 'Docente', 'Alumno']
+  },
+  {
     label: 'Dashboard',
     route: 'dashboard',
     path: '/dashboard',
