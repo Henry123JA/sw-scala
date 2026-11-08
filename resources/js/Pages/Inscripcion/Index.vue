@@ -15,16 +15,20 @@
 
       <!-- Filters & Search -->
       <div class="flex flex-col sm:flex-row gap-4 items-center">
-        <input
-          v-model="searchTerm"
-          type="text"
-          placeholder="Buscar por alumno o curso..."
-          class="w-full sm:max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
-          @input="onSearch"
-        />
+        <div class="relative w-full sm:max-w-md">
+          <input
+            v-model="searchTerm"
+            type="text"
+            placeholder="Buscar por alumno o curso..."
+            class="input-menta text-xs py-2"
+            style="padding-left: 2.25rem !important;"
+            @input="onSearch"
+          />
+          <component :is="Lucide.Search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
         <select
           v-model="selectedEstado"
-          class="w-full sm:max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+          class="input-menta w-full sm:max-w-xs text-xs py-2"
           @change="onSearch"
         >
           <option value="">Todos los estados</option>
@@ -174,8 +178,8 @@ const page = usePage();
 const canEdit = computed(() => ['Propietario', 'Secretaria'].includes(page.props.auth?.rol));
 const canDelete = computed(() => page.props.auth?.rol === 'Propietario');
 
-const searchTerm = ref(props.buscar);
-const selectedEstado = ref(props.estado);
+const searchTerm = ref(props.buscar || '');
+const selectedEstado = ref(props.estado || '');
 
 let debounceTimer = null;
 function onSearch() {

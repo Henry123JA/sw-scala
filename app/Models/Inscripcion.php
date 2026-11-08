@@ -41,4 +41,19 @@ class Inscripcion extends Model
     {
         return $this->belongsTo(Grupo::class, 'grupo_id');
     }
+
+    public function asistencias(): HasMany
+    {
+        return $this->hasMany(Asistencia::class, 'inscripcion_id');
+    }
+
+    public function calificaciones(): HasMany
+    {
+        return $this->hasMany(Calificacion::class, 'inscripcion_id');
+    }
+
+    public function observacionesAcademicas(): HasMany
+    {
+        return $this->hasMany(ObservacionAcademica::class, 'inscripcion_id');
+    }
 }

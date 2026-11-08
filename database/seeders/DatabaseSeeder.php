@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             EspecialidadSeeder::class,
             AdminSeeder::class,
             DemoDataSeeder::class,
+            CicloAcademicoSeeder::class,
         ]);
     }
 }

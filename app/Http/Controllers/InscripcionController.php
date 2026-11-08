@@ -75,8 +75,11 @@ class InscripcionController extends Controller
             abort(403, 'No autorizado.');
         }
 
+        $observaciones = app(\App\Services\ObservacionAcademicaService::class)->listarPorInscripcion($id, auth()->user());
+
         return Inertia::render('Inscripcion/Show', [
             'inscripcion' => $inscripcion,
+            'observaciones' => $observaciones,
         ]);
     }
 

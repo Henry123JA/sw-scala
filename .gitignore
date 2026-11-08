@@ -6,6 +6,8 @@
 .env
 .env.*
 !.env.example
+plan_multiagente_hu11_hu13.md
+plan_multiagente_ciclo_academico.md
 
 /storage/*.key
 /storage/logs/*
