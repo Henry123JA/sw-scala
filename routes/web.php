@@ -17,6 +17,8 @@ use App\Http\Controllers\ObservacionAcademicaController;
 use App\Http\Controllers\ProgresoAcademicoController;
 use App\Http\Controllers\SeguimientoAcademicoController;
 use App\Http\Controllers\ReporteAcademicoController;
+use App\Http\Controllers\RiesgoAcademicoController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -64,6 +66,17 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
     // ── Seguimiento Académico y Ficha Integral — HU13 ───────────────────────
     Route::get('/seguimiento', [SeguimientoAcademicoController::class, 'index'])->name('seguimiento.index');
     Route::get('/seguimiento/inscripciones/{inscripcion}', [SeguimientoAcademicoController::class, 'show'])->whereNumber('inscripcion')->name('seguimiento.show');
+
+    // ── Seguimiento Académico Predictivo — Sprint 3 (HU15 a HU22) ───────────
+    Route::get('/riesgo', [RiesgoAcademicoController::class, 'index'])->name('riesgo.index');
+    Route::post('/riesgo/analizar', [RiesgoAcademicoController::class, 'analizar'])->name('riesgo.analizar');
+    Route::get('/riesgo/alertas/{alerta}', [RiesgoAcademicoController::class, 'show'])->whereNumber('alerta')->name('riesgo.show');
+    Route::put('/riesgo/alertas/{alerta}/estado', [RiesgoAcademicoController::class, 'actualizarEstado'])->whereNumber('alerta')->name('riesgo.alerta.estado');
+    Route::post('/riesgo/alertas/{alerta}/intervenciones', [RiesgoAcademicoController::class, 'storeIntervencion'])->whereNumber('alerta')->name('riesgo.intervencion.store');
+    Route::put('/riesgo/intervenciones/{intervencion}', [RiesgoAcademicoController::class, 'actualizarIntervencion'])->whereNumber('intervencion')->name('riesgo.intervencion.update');
+    Route::post('/riesgo/modelos', [RiesgoAcademicoController::class, 'storeVersionModelo'])->name('riesgo.modelo.store');
+    Route::put('/riesgo/modelos/{modelo}/activar', [RiesgoAcademicoController::class, 'activarVersionModelo'])->whereNumber('modelo')->name('riesgo.modelo.activar');
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/perfil', [PerfilController::class, 'index'])->name('perfil.index');
@@ -173,5 +186,12 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
     });
 });
 
+// ── Endpoints de Integración Automatizada n8n y Servicio Python ML (HU19) ────
+Route::get('/api/ml/dataset-alumnos', [RiesgoAcademicoController::class, 'apiDatasetAlumnos'])
+    ->name('api.ml.dataset');
+
+Route::post('/api/ml/webhook-alertas', [RiesgoAcademicoController::class, 'apiWebhookAlertas'])
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->name('api.ml.webhook');
 
 require __DIR__.'/auth.php';

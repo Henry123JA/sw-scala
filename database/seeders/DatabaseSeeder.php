@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             DemoDataSeeder::class,
             CicloAcademicoSeeder::class,
+            RiesgoPredictivoSeeder::class,
         ]);
     }
 }

@@ -32,6 +32,13 @@ export const navigation = [
     roles: ['Propietario', 'Secretaria', 'Docente', 'Alumno']
   },
   {
+    label: 'Riesgo Predictivo',
+    route: 'riesgo.index',
+    path: '/riesgo',
+    icon: 'ShieldAlert',
+    roles: ['Propietario', 'Secretaria', 'Docente', 'Alumno']
+  },
+  {
     label: 'Dashboard',
     route: 'dashboard',
     path: '/dashboard',
