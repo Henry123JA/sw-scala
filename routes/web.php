@@ -16,6 +16,7 @@ use App\Http\Controllers\EvaluacionController;
 use App\Http\Controllers\ObservacionAcademicaController;
 use App\Http\Controllers\ProgresoAcademicoController;
 use App\Http\Controllers\SeguimientoAcademicoController;
+use App\Http\Controllers\ReporteAcademicoController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -25,6 +26,14 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
     // ── Gestión y Consulta de Asistencias — HU8 ─────────────────────────────
     // El index es accesible por todos los roles autenticados (los alumnos ven su propio historial)
     Route::get('/asistencias', [AsistenciaController::class, 'index'])->name('asistencias.index');
+    // ── Reportes Académicos — HU14 ──────────────────────────────────────────
+    // Vista general y consulta de reportes (accesible para usuarios autenticados con bitácora)
+    // ── Reportes Académicos — HU14 ──────────────────────────────────────────
+    Route::prefix('reportes-academicos')->name('reportes.academicos.')->group(function () {
+        Route::get('/', [ReporteAcademicoController::class, 'index'])->name('index');
+        Route::get('/grupos/{grupo}/sabana', [ReporteAcademicoController::class, 'sabanaGrupo'])->whereNumber('grupo')->name('sabana.grupo');
+        Route::get('/inscripciones/{inscripcion}/boletin', [ReporteAcademicoController::class, 'boletinIndividual'])->whereNumber('inscripcion')->name('boletin.individual');
+    });
 
     // La toma y guardado de asistencias está restringido a Propietario, Secretaria y Docente
     Route::middleware('role:Propietario,Secretaria,Docente')->group(function () {
