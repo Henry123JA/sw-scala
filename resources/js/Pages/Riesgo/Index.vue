@@ -362,8 +362,8 @@
                           <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-700 border border-gray-200">
                             {{ getFactoresList(alerta)[0].categoria || 'FACTOR' }}
                           </span>
-                          <span class="text-[11px] font-extrabold text-rose-600">
-                            {{ getFactoresList(alerta)[0].impacto ?? getFactoresList(alerta)[0].peso ?? 0 }}% impacto
+                          <span class="text-[11px] font-extrabold rounded px-1" :class="clasesAporte(getFactoresList(alerta)[0])">
+                            {{ textoAporte(getFactoresList(alerta)[0]) }}
                           </span>
                           <span
                             v-if="getFactoresList(alerta).length > 1"
@@ -379,7 +379,7 @@
                     </div>
                   </template>
                   <span v-else class="text-xs text-gray-400 italic">
-                    Sin factores críticos registrados
+                    Sin explicación individual registrada
                   </span>
                 </td>
 
@@ -673,6 +673,7 @@
 </template>
 
 <script setup>
+import { textoAporte, clasesAporte } from './explicacion';
 import { ref, computed } from 'vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
@@ -928,7 +929,7 @@ function iniciales(nombres, apellidos) {
 
 function formatScore(val) {
   const num = Number(val ?? 0);
-  return Number.isInteger(num) ? num : num.toFixed(1);
+  return Number.isFinite(num) ? num.toFixed(2) : '—';
 }
 
 function formatMetricPercent(val) {

@@ -15,6 +15,15 @@ class RiesgoPredictivoTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['services.ml.integration_token' => 'token-integracion-pruebas']);
+        $this->withToken('token-integracion-pruebas');
+        // Estas pruebas verifican heuristicas locales; la API tiene su propia suite.
+        config(['services.ml.enabled' => false]);
+    }
+
     public function test_motor_predictivo_extrae_features_y_clasifica_con_explicabilidad_xai(): void
     {
         $inscripcion = Inscripcion::with(['alumno.usuario', 'grupo.curso'])->first();

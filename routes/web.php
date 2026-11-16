@@ -188,10 +188,12 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
 
 // ── Endpoints de Integración Automatizada n8n y Servicio Python ML (HU19) ────
 Route::get('/api/ml/dataset-alumnos', [RiesgoAcademicoController::class, 'apiDatasetAlumnos'])
+    ->middleware(\App\Http\Middleware\RequireMlServiceToken::class)
     ->name('api.ml.dataset');
 
 Route::post('/api/ml/webhook-alertas', [RiesgoAcademicoController::class, 'apiWebhookAlertas'])
     ->withoutMiddleware([ValidateCsrfToken::class])
+    ->middleware(\App\Http\Middleware\RequireMlServiceToken::class)
     ->name('api.ml.webhook');
 
 require __DIR__.'/auth.php';

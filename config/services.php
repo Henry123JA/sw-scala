@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'ml' => [
+        'integration_token' => env('ML_INTEGRATION_TOKEN', ''),
+        'enabled' => env('ML_SERVICE_ENABLED', false),
+        'url' => env('ML_SERVICE_URL', 'http://127.0.0.1:8001'),
+        'timeout' => (int) env('ML_SERVICE_TIMEOUT', 10),
+    ],
 
     /*
     |--------------------------------------------------------------------------

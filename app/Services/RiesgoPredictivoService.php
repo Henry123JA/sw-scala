@@ -10,6 +10,7 @@ use App\Models\VersionModelo;
 use App\Models\Usuario;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class RiesgoPredictivoService
 {
@@ -113,47 +114,68 @@ class RiesgoPredictivoService
      * o ejecutando el motor predictivo heurístico calibrado local.
      * Registra o actualiza la AlertaSeguimiento correspondiente.
      */
-    public function analizarInscripcion(Inscripcion $inscripcion, string $origen = 'MOTOR_LOCAL'): AlertaSeguimiento
+    public function analizarInscripcion(Inscripcion $inscripcion, string $origen = 'MOTOR_LOCAL'): ?AlertaSeguimiento
     {
         $features = $this->extraerFeatures($inscripcion);
+        if ($inscripcion->estado === 'CANCELADA'
+            || $features['total_sesiones'] < 3
+            || $features['evaluaciones_rendidas'] < 1
+            || $features['promedio_calificaciones'] === null) {
+            return null;
+        }
         $modeloActivo = $this->obtenerOCrearModeloActivo();
 
         $resultadoPrediccion = null;
-        $origenFinal = $origen;
+        $origenFinal = 'MOTOR_LOCAL';
+        $metadataMl = null;
 
-        if (filter_var(env('ML_SERVICE_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
-            $endpoint = $modeloActivo?->url_endpoint
-                ?: (rtrim((string) env('ML_SERVICE_URL', 'http://127.0.0.1:8001'), '/') . '/api/v1/predict');
-
+        if (config('services.ml.enabled', false)) {
+            $endpoint = rtrim(config('services.ml.url'), '/') . '/api/v1/predict';
             try {
-                $response = Http::timeout(2)->post($endpoint, [
-                    'inscripcion_id' => $inscripcion->id,
-                    'version_modelo' => $modeloActivo?->version ?? 'v1.1.0',
-                    'features'       => $features,
-                ]);
-
-                if ($response->successful()) {
-                    $payload = $response->json();
-                    if (isset($payload['score_riesgo'], $payload['nivel_riesgo'])) {
-                        $resultadoPrediccion = [
-                            'score_riesgo'        => round((float) $payload['score_riesgo'], 2),
-                            'nivel_riesgo'        => strtoupper((string) $payload['nivel_riesgo']),
-                            'factores_riesgo'     => $payload['factores_riesgo'] ?? [],
-                            'resumen_explicativo' => $payload['resumen_explicativo'] ?? null,
-                        ];
-                        if ($origen === 'MOTOR_LOCAL') {
-                            $origenFinal = 'ML_API';
-                        }
-                    }
+                $response = Http::acceptJson()->connectTimeout(2)
+                    ->timeout(config('services.ml.timeout', 10))->post($endpoint, [
+                        'inscripcion_id' => $inscripcion->id,
+                        'features' => $features,
+                    ])->throw();
+                $payload = $response->json();
+                if (is_array($payload) && in_array($payload['estado_prediccion'] ?? null,
+                    ['DATOS_INSUFICIENTES', 'NO_APLICA_RETIRO_CONFIRMADO'], true)) {
+                    return null;
                 }
+                $this->validarPrediccionMl($payload, $inscripcion->id);
+                $modeloActivo = VersionModelo::firstOrCreate(
+                    ['version' => $payload['version_modelo']],
+                    ['nombre' => 'FastAPI - ' . $payload['version_modelo'],
+                     'algoritmo' => 'Random Forest (scikit-learn)',
+                     'accuracy' => 0, 'f1_score' => 0,
+                     'fecha_entrenamiento' => now()->toDateString(),
+                     'url_endpoint' => $endpoint, 'activo' => false,
+                     'descripcion' => 'Registro automatico de version recibida de FastAPI. Fecha de registro, no de entrenamiento. Metricas reales no disponibles; 0 es marcador. Modelo experimental sintetico.']);
+                $resultadoPrediccion = [
+                    'score_riesgo' => round((float) $payload['score_riesgo'], 2),
+                    'nivel_riesgo' => $payload['nivel_riesgo'],
+                    'factores_riesgo' => $payload['factores_riesgo'],
+                    'resumen_explicativo' => $payload['resumen_explicativo'],
+                ];
+                $metadataMl = array_intersect_key($payload, array_flip([
+                    'version_modelo', 'experimental', 'entrenado_con',
+                    'estimacion_reprobo_pct', 'estimacion_abandono_pct',
+                    'requiere_seguimiento_por_pausa', 'aviso', 'explicacion_modelo', 'acciones_sugeridas',
+                ]));
+                $origenFinal = 'ML_API';
             } catch (\Throwable $e) {
-                // Fallback transparente al motor predictivo local calibrado
-                $resultadoPrediccion = null;
+                Log::warning('Servicio ML no disponible o respuesta invalida; se usa motor local.', [
+                    'inscripcion_id' => $inscripcion->id, 'tipo' => get_class($e),
+                ]);
             }
         }
 
         if ($resultadoPrediccion === null) {
             $resultadoPrediccion = $this->clasificarLocalmente($features, $inscripcion);
+        }
+        $features['origen_ejecucion'] = $origen;
+        if ($metadataMl !== null) {
+            $features['prediccion_ml'] = $metadataMl;
         }
 
         // Buscar alerta existente para esta inscripción (priorizando PENDIENTE o EN_ATENCION)
@@ -195,6 +217,26 @@ class RiesgoPredictivoService
      * Calcula score_riesgo (0-100), nivel_riesgo (ALTO >= 65, MEDIO 35-64.99, BAJO < 35),
      * factores_riesgo ponderados (XAI - HU17) y resumen_explicativo en español.
      */
+    protected function validarPrediccionMl(mixed $payload, int $inscripcionId): void
+    {
+        if (! is_array($payload) || ($payload['inscripcion_id'] ?? null) !== $inscripcionId
+            || ($payload['estado_prediccion'] ?? null) !== 'CALCULADA'
+            || ! is_numeric($payload['score_riesgo'] ?? null)
+            || ! is_finite((float) $payload['score_riesgo'])
+            || $payload['score_riesgo'] < 0 || $payload['score_riesgo'] > 100
+            || ! is_string($payload['version_modelo'] ?? null)
+            || ! preg_match('/^[a-zA-Z0-9._-]{1,30}$/', $payload['version_modelo'])
+            || ! is_array($payload['factores_riesgo'] ?? null)
+            || ! is_string($payload['resumen_explicativo'] ?? null)) {
+            throw new \UnexpectedValueException('Respuesta ML incompatible');
+        }
+        $score = round((float) $payload['score_riesgo'], 2);
+        $esperado = $score >= 65 ? 'ALTO' : ($score >= 35 ? 'MEDIO' : 'BAJO');
+        if (($payload['nivel_riesgo'] ?? null) !== $esperado) {
+            throw new \UnexpectedValueException('Nivel ML inconsistente con score');
+        }
+    }
+
     protected function clasificarLocalmente(array $features, Inscripcion $inscripcion): array
     {
         $asistenciaPct = (float) ($features['porcentaje_asistencia'] ?? 100.0);
@@ -415,8 +457,9 @@ class RiesgoPredictivoService
         $contador = 0;
 
         foreach ($inscripciones as $inscripcion) {
-            $this->analizarInscripcion($inscripcion, $origen);
-            $contador++;
+            if ($this->analizarInscripcion($inscripcion, $origen) !== null) {
+                $contador++;
+            }
         }
 
         return $contador;
@@ -691,6 +734,74 @@ class RiesgoPredictivoService
     /**
      * Procesa un lote de alertas enviadas vía Webhook desde n8n o servicio ML externo.
      */
+    /** Guarda exclusivamente resultados ML; no inventa scores ni factores locales. */
+    public function procesarResultadosMl(array $resultados): array
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($resultados) {
+            $ids = [];
+            $omitidas = [];
+            foreach ($resultados as $item) {
+                $inscripcion = Inscripcion::whereKey($item['inscripcion_id'])->lockForUpdate()->first();
+                if (! $inscripcion) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'resultados' => 'La inscripcion indicada no existe.',
+                    ]);
+                }
+                $features = $this->extraerFeatures($inscripcion);
+                $estado = $item['estado_prediccion'];
+                if ($estado !== 'CALCULADA' || $inscripcion->estado === 'CANCELADA'
+                    || $features['total_sesiones'] < 3 || $features['evaluaciones_rendidas'] < 1
+                    || $features['promedio_calificaciones'] === null) {
+                    $omitidas[] = $inscripcion->id;
+                    continue;
+                }
+                try {
+                    $this->validarPrediccionMl($item, $inscripcion->id);
+                } catch (\UnexpectedValueException $e) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'resultados' => 'Score, nivel o contrato ML incompatible para inscripcion ' . $inscripcion->id,
+                    ]);
+                }
+                $modelo = VersionModelo::firstOrCreate(
+                    ['version' => $item['version_modelo']],
+                    ['nombre' => 'FastAPI - ' . $item['version_modelo'],
+                     'algoritmo' => 'Random Forest (scikit-learn)', 'accuracy' => 0, 'f1_score' => 0,
+                     'fecha_entrenamiento' => now()->toDateString(),
+                     'url_endpoint' => rtrim(config('services.ml.url'), '/') . '/api/v1/predict',
+                     'activo' => false,
+                     'descripcion' => 'Version recibida de FastAPI. Fecha de registro; metricas 0 son marcadores sin validacion real.']);
+                $features['origen_ejecucion'] = 'N8N_AUTO';
+                $features['prediccion_ml'] = array_intersect_key($item, array_flip([
+                    'version_modelo', 'experimental', 'entrenado_con', 'estimacion_reprobo_pct',
+                    'estimacion_abandono_pct', 'requiere_seguimiento_por_pausa', 'aviso', 'explicacion_modelo', 'acciones_sugeridas',
+                ]));
+                $features['prediccion_ml']['proveedor'] = 'ML_API';
+                $alerta = AlertaSeguimiento::where('inscripcion_id', $inscripcion->id)
+                    ->orderByDesc('id')->lockForUpdate()->first();
+                $estadoAlerta = $alerta?->estado ?? 'PENDIENTE';
+                if ($estadoAlerta === 'DESCARTADA' && $item['nivel_riesgo'] === 'ALTO') {
+                    $estadoAlerta = 'PENDIENTE';
+                }
+                $datos = [
+                    'version_modelo_id' => $modelo->id, 'nivel_riesgo' => $item['nivel_riesgo'],
+                    'score_riesgo' => round((float) $item['score_riesgo'], 2),
+                    'factores_riesgo' => $item['factores_riesgo'], 'metricas_base' => $features,
+                    'resumen_explicativo' => $item['resumen_explicativo'],
+                    'estado' => $estadoAlerta, 'origen' => 'N8N_AUTO', 'fecha_analisis' => now(),
+                ];
+                if ($alerta) {
+                    $alerta->update($datos);
+                } else {
+                    $alerta = AlertaSeguimiento::create(['inscripcion_id' => $inscripcion->id] + $datos);
+                }
+                $ids[] = $alerta->id;
+            }
+            return ['procesadas' => count($ids), 'omitidas' => count($omitidas),
+                    'alerta_ids' => $ids, 'inscripciones_omitidas' => $omitidas,
+                    'origen' => 'N8N_AUTO'];
+        });
+    }
+
     public function procesarWebhookAlertas(array $predicciones, ?string $versionCodigo = null): array
     {
         $modelo = $versionCodigo

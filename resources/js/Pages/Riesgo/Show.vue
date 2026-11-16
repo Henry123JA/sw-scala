@@ -146,7 +146,7 @@
             <div class="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4" :class="getNivelRiesgoPanelClasses(alerta.nivel_riesgo)">
               <div>
                 <span class="text-[11px] font-bold uppercase tracking-wider block opacity-80">
-                  Probabilidad Estimada de Riesgo Académico
+                  {{ metricas.prediccion_ml ? 'Estimación experimental de reprobación' : 'Índice de seguimiento académico' }}
                 </span>
                 <div class="flex items-baseline gap-2 mt-1">
                   <span class="text-4xl font-black tracking-tight">
@@ -176,19 +176,31 @@
             <div class="p-4 rounded-xl bg-[#F0FDF9] border border-[#DDEFEA] text-xs text-gray-700 leading-relaxed">
               <div class="font-extrabold text-[#0F766E] mb-1 flex items-center gap-1.5">
                 <component :is="Lucide.MessageSquareQuote" class="w-4 h-4" />
-                Explicación del Modelo Predictivo:
+                Resumen de la predicción
               </div>
               <p>
                 {{ alerta.resumen_explicativo || generarResumenExplicativoFallback() }}
               </p>
             </div>
 
+            <section v-if="accionesSugeridas.length" class="p-4 rounded-xl bg-white border border-[#DDEFEA] text-xs text-gray-700">
+              <h3 class="font-extrabold text-[#0F766E] mb-2">Acciones sugeridas para el docente</h3>
+              <ul class="list-disc pl-5 space-y-2">
+                <li v-for="(accion, idx) in accionesSugeridas" :key="idx">{{ accion }}</li>
+              </ul>
+            </section>
+
             <!-- Lista Desglosada de Factores Determinantes con Barras de Impacto -->
             <div class="space-y-3 pt-1">
               <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500">
-                Factores Determinantes e Impacto Ponderado ({{ listaFactores.length }})
+                Factores de riesgo y protección ({{ listaFactores.length }})
               </h3>
 
+              <p v-if="explicacionModelo" class="text-xs text-gray-600 leading-relaxed">
+                Referencia interna del modelo: {{ formatScore(explicacionModelo.referencia_pct) }}%.
+                Cada aporte indica cuánto eleva o reduce la estimación frente a esa referencia.
+                Las barras muestran el peso relativo de su magnitud, no causas ni porcentajes de culpa.
+              </p>
               <div v-if="listaFactores.length > 0" class="space-y-3">
                 <div
                   v-for="(factor, idx) in listaFactores"
@@ -210,9 +222,9 @@
 
                     <span
                       class="text-xs font-black shrink-0 px-2 py-0.5 rounded-md"
-                      :class="Number(factor.impacto ?? factor.peso ?? 0) >= 35 ? 'bg-rose-50 text-rose-700' : Number(factor.impacto ?? factor.peso ?? 0) >= 20 ? 'bg-amber-50 text-amber-700' : 'bg-teal-50 text-teal-700'"
+                      :class="clasesAporte(factor)"
                     >
-                      +{{ factor.impacto ?? factor.peso ?? 0 }}% impacto
+                      {{ textoAporte(factor) }}
                     </span>
                   </div>
 
@@ -220,12 +232,18 @@
                     Valor observado: <strong class="text-gray-700">{{ factor.detalle || factor.valor_actual }}</strong>
                   </p>
 
-                  <!-- Barra Horizontal de Impacto (HU17) -->
+                  <p v-if="factor.metodo === 'TREE_SHAP'" class="text-[11px] text-gray-500">
+                    Peso relativo del aporte: {{ factor.impacto }}%
+                  </p>
+                  <p v-if="aclaracionFactor(factor)" class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed">
+                    {{ aclaracionFactor(factor) }}
+                  </p>
+                  <!-- Magnitud relativa; el signo se muestra en la etiqueta -->
                   <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                     <div
                       class="h-2 rounded-full transition-all duration-500"
-                      :class="getImpactoBarClasses(factor.impacto ?? factor.peso ?? 0)"
-                      :style="{ width: `${Math.min(Math.max(Number(factor.impacto ?? factor.peso ?? 0), 5), 100)}%` }"
+                      :class="clasesBarraAporte(factor)"
+                      :style="{ width: `${Math.min(Math.max(Number(factor.impacto ?? factor.peso ?? 0), 0), 100)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -233,7 +251,7 @@
 
               <div v-else class="p-6 text-center rounded-xl bg-emerald-50/50 border border-emerald-100 text-xs text-emerald-800">
                 <component :is="Lucide.CheckCircle" class="w-6 h-6 mx-auto text-emerald-600 mb-1.5" />
-                El estudiante mantiene indicadores saludables sin factores de riesgo críticos activos.
+                No hay una explicación individual disponible para esta alerta. Revise las métricas y el resumen.
               </div>
             </div>
           </div>
@@ -502,6 +520,7 @@
 </template>
 
 <script setup>
+import { textoAporte, clasesAporte, clasesBarraAporte, aclaracionFactor } from './explicacion';
 import { ref, computed } from 'vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
@@ -672,7 +691,7 @@ function iniciales(nombres, apellidos) {
 
 function formatScore(val) {
   const num = Number(val ?? 0);
-  return Number.isInteger(num) ? num : num.toFixed(1);
+  return Number.isFinite(num) ? num.toFixed(2) : '—';
 }
 
 function formatDate(dateStr) {
@@ -730,12 +749,12 @@ function getNivelRiesgoBarClasses(nivel) {
   }
 }
 
-function getImpactoBarClasses(impacto) {
-  const val = Number(impacto || 0);
-  if (val >= 35) return 'bg-rose-500';
-  if (val >= 20) return 'bg-amber-500';
-  return 'bg-teal-500';
-}
+const accionesSugeridas = computed(() => {
+  const acciones = metricas.value?.prediccion_ml?.acciones_sugeridas;
+  return Array.isArray(acciones) ? acciones.filter(a => typeof a === 'string' && a.trim()) : [];
+});
+
+const explicacionModelo = computed(() => metricas.value?.prediccion_ml?.explicacion_modelo || null);
 
 function getCategoriaFactorBadgeClasses(cat) {
   switch (cat) {

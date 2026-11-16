@@ -268,6 +268,41 @@ class RiesgoAcademicoController extends Controller
      */
     public function apiWebhookAlertas(Request $request): JsonResponse
     {
+        // Contrato batch de FastAPI: tambien un lote vacio es una operacion sin cambios.
+        if ($request->exists('resultados')) {
+            $data = $request->validate([
+                'total_registros' => ['required', 'integer', 'min:0', 'max:1000'],
+                'predicciones_calculadas' => ['required', 'integer', 'min:0', 'max:1000'],
+                'resultados' => ['present', 'array', 'max:1000'],
+                'resultados.*.inscripcion_id' => ['required', 'integer', 'min:1', 'distinct'],
+                'resultados.*.estado_prediccion' => ['required', 'in:CALCULADA,DATOS_INSUFICIENTES,NO_APLICA_RETIRO_CONFIRMADO'],
+                'resultados.*.version_modelo' => ['required', 'string', 'max:30', 'regex:/^[a-zA-Z0-9._-]+$/'],
+                'resultados.*.score_riesgo' => ['present', 'nullable', 'numeric', 'between:0,100'],
+                'resultados.*.nivel_riesgo' => ['present', 'nullable', 'in:BAJO,MEDIO,ALTO'],
+                'resultados.*.factores_riesgo' => ['present', 'array'],
+                'resultados.*.resumen_explicativo' => ['required', 'string', 'max:10000'],
+                'resultados.*.explicacion_modelo' => ['nullable', 'array'],
+                'resultados.*.acciones_sugeridas' => ['array', 'max:10'],
+                'resultados.*.acciones_sugeridas.*' => ['string', 'max:2000'],
+                'resultados.*.experimental' => ['required', 'boolean'],
+                'resultados.*.entrenado_con' => ['required', 'string', 'max:100'],
+                'resultados.*.estimacion_reprobo_pct' => ['nullable', 'numeric', 'between:0,100'],
+                'resultados.*.estimacion_abandono_pct' => ['nullable', 'numeric', 'between:0,100'],
+                'resultados.*.requiere_seguimiento_por_pausa' => ['boolean'],
+                'resultados.*.aviso' => ['nullable', 'string', 'max:2000'],
+            ]);
+            $calculadas = collect($data['resultados'])->where('estado_prediccion', 'CALCULADA')->count();
+            if (count($data['resultados']) !== $data['total_registros']
+                || $calculadas !== $data['predicciones_calculadas']) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'resultados' => 'Los totales del lote no coinciden.',
+                ]);
+            }
+            return response()->json(['status' => 'ok', 'modo' => 'N8N_FASTAPI_BATCH']
+                + $this->service->procesarResultadosMl($data['resultados']));
+        }
+
+
         $predicciones = $request->input('predicciones', $request->input('alertas', []));
         $versionModelo = $request->input('version_modelo');
 
