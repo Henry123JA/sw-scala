@@ -27,6 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
             return back()->withErrors([$e->getField() => $e->getMessage()]);
         });
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();

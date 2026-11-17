@@ -67,6 +67,11 @@ const page = usePage();
 
 const routeNames = {
   'dashboard': 'Panel Principal / Dashboard',
+  'asistencias': 'Control de Asistencias',
+  'evaluaciones': 'Evaluaciones y Calificaciones',
+  'progreso': 'Progreso Académico',
+  'seguimiento': 'Seguimiento Académico',
+  'riesgo': 'Riesgo Predictivo e Intervenciones',
   'perfil': 'Mi Perfil',
   'alumnos': 'Gestión de Alumnos',
   'docentes': 'Gestión de Docentes',

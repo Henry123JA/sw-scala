@@ -56,4 +56,14 @@ class Inscripcion extends Model
     {
         return $this->hasMany(ObservacionAcademica::class, 'inscripcion_id');
     }
+
+    public function alertasSeguimiento(): HasMany
+    {
+        return $this->hasMany(AlertaSeguimiento::class, 'inscripcion_id');
+    }
+
+    public function intervencionesSeguimiento(): HasMany
+    {
+        return $this->hasMany(IntervencionSeguimiento::class, 'inscripcion_id');
+    }
 }

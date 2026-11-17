@@ -8,7 +8,8 @@
 !.env.example
 plan_multiagente_hu11_hu13.md
 plan_multiagente_ciclo_academico.md
-
+plan_multiagente_sprint3_predictivo.md
+contenido_necesarioVer.md
 /storage/*.key
 /storage/logs/*
 /storage/framework/cache/*
