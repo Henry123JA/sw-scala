@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
             'bitacora' => \App\Http\Middleware\BitacoraMiddleware::class,
             'pagina.visitada' => \App\Http\Middleware\PaginaVisitadaMiddleware::class,
+            'legal.aceptado' => \App\Http\Middleware\RequireLegalAcceptance::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
