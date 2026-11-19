@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BienvenidaSistemaMail;
+use App\Mail\PoliticaPrivacidadAceptadaMail;
+use App\Mail\TerminosCondicionesAceptadosMail;
 use App\Models\Alumno;
 use App\Models\Curso;
 use App\Models\Docente;
@@ -10,6 +13,9 @@ use App\Services\AgenteAtencionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -136,11 +142,13 @@ class PortalController extends Controller
     }
 
     /**
-     * Registra la aceptación de la Política de Privacidad y muestra la confirmación (Figura 7.11).
+     * Registra la aceptación de la Política de Privacidad, envía el correo y muestra la confirmación (Figura 7.11).
      */
     public function aceptarPolitica(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $fechaTexto = now()->format('d/m/Y H:i');
+
         if ($user) {
             try {
                 if (Schema::hasColumn('usuario', 'politica_aceptada_at')) {
@@ -148,6 +156,15 @@ class PortalController extends Controller
                 }
             } catch (\Throwable $e) {
                 // Continuar usando sesión si la columna aún no fue migrada
+            }
+
+            // Enviar Correo #1: Copia de la Política de Privacidad aceptada
+            if (!empty($user->email)) {
+                try {
+                    Mail::to($user->email)->send(new PoliticaPrivacidadAceptadaMail($user, $fechaTexto));
+                } catch (\Throwable $e) {
+                    Log::error('Error enviando correo de Política de Privacidad: ' . $e->getMessage());
+                }
             }
         }
 
@@ -182,11 +199,13 @@ class PortalController extends Controller
     }
 
     /**
-     * Registra la aceptación de los Términos y Condiciones y muestra la confirmación (Figura 7.13).
+     * Registra la aceptación de los Términos y Condiciones, envía el correo de Términos y el correo de Bienvenida en correos distintos (Figura 7.13).
      */
     public function aceptarTerminos(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $fechaTexto = now()->format('d/m/Y H:i');
+
         if ($user) {
             try {
                 if (Schema::hasColumn('usuario', 'terminos_aceptados_at')) {
@@ -194,6 +213,22 @@ class PortalController extends Controller
                 }
             } catch (\Throwable $e) {
                 // Continuar usando sesión
+            }
+
+            if (!empty($user->email)) {
+                // Enviar Correo #2: Copia de los Términos y Condiciones aceptados
+                try {
+                    Mail::to($user->email)->send(new TerminosCondicionesAceptadosMail($user, $fechaTexto));
+                } catch (\Throwable $e) {
+                    Log::error('Error enviando correo de Términos y Condiciones: ' . $e->getMessage());
+                }
+
+                // Enviar Correo #3 (Correo separado): Bienvenida Oficial al Sistema SCALA
+                try {
+                    Mail::to($user->email)->send(new BienvenidaSistemaMail($user, $fechaTexto));
+                } catch (\Throwable $e) {
+                    Log::error('Error enviando correo de Bienvenida: ' . $e->getMessage());
+                }
             }
         }
 
@@ -255,5 +290,20 @@ class PortalController extends Controller
         $request->session()->forget(['politica_aceptada', 'terminos_aceptados']);
 
         return redirect()->route('portal.politica', ['revisar' => 1, 'onboarding' => 1]);
+    }
+
+    /**
+     * Si el usuario rechaza (no acepta) la Política de Privacidad o los Términos y Condiciones,
+     * cierra su sesión inmediatamente y no le permite ingresar al sistema.
+     */
+    public function rechazarOnboarding(Request $request): RedirectResponse
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->withErrors([
+            'general' => 'Acceso denegado: Debe aceptar la Política de Privacidad y los Términos y Condiciones para ingresar al sistema académico SCALA.',
+        ]);
     }
 }

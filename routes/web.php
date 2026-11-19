@@ -34,8 +34,9 @@ Route::get('/terminos-condiciones', [PortalController::class, 'terminosCondicion
 Route::post('/terminos-condiciones/aceptar', [PortalController::class, 'aceptarTerminos'])->name('portal.terminos.aceptar');
 Route::get('/bienvenida', [PortalController::class, 'bienvenida'])->name('portal.bienvenida');
 Route::post('/onboarding/reiniciar', [PortalController::class, 'reiniciarOnboarding'])->name('portal.onboarding.reiniciar');
+Route::post('/onboarding/rechazar', [PortalController::class, 'rechazarOnboarding'])->name('portal.onboarding.rechazar');
 
-Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
+Route::middleware(['auth', 'legal.aceptado', 'bitacora', 'pagina.visitada'])->group(function () {
     // ── Gestión y Consulta de Asistencias — HU8 ─────────────────────────────
     // El index es accesible por todos los roles autenticados (los alumnos ven su propio historial)
     Route::get('/asistencias', [AsistenciaController::class, 'index'])->name('asistencias.index');

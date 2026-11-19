@@ -77,8 +77,9 @@ jobs:
             # 3. Instalar dependencias PHP de producción
             composer install --no-dev --optimize-autoloader --no-interaction
 
-            # 4. Ejecutar nuevas migraciones de PostgreSQL sin borrar datos
+            # 4. Ejecutar nuevas migraciones y seeders idempotentes de PostgreSQL sin borrar datos
             php artisan migrate --force
+            php artisan db:seed --force
 
             # 5. Limpiar y recargar cachés de Laravel
             php artisan optimize:clear

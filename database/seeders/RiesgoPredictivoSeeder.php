@@ -60,6 +60,7 @@ class RiesgoPredictivoSeeder extends Seeder
         VersionModelo::where('id', '!=', $modeloActivo->id)->update(['activo' => false]);
 
         // 2. Ejecutar análisis predictivo para todas las inscripciones (HU15, HU16, HU17, HU18)
+        config(['services.ml.enabled' => false]);
         /** @var RiesgoPredictivoService $service */
         $service = app(RiesgoPredictivoService::class);
         $service->analizarAcademia(null, null, 'MOTOR_LOCAL');

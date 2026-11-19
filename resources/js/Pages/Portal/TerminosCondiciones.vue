@@ -80,6 +80,9 @@
           <p class="text-sm text-gray-600 leading-relaxed">
             Se ha registrado su conformidad con los <strong>Términos y Condiciones de Uso de la Plataforma Académica SCALA</strong>. Ya puede finalizar su proceso de bienvenida.
           </p>
+          <p v-if="usuario?.email" class="text-xs font-semibold text-[#0F766E] bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 inline-block">
+            📧 Se han enviado 2 correos independientes a <strong>{{ usuario.email }}</strong>: la copia de los Términos y Condiciones y el Correo Oficial de Bienvenida al Sistema.
+          </p>
         </div>
 
         <!-- Resumen de Auditoría -->
@@ -198,10 +201,21 @@
           </label>
 
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <Link :href="buildUrl('/politica-privacidad?revisar=1')" class="btn-menta-outline text-xs !py-2.5">
-              <component :is="Lucide.ArrowLeft" class="w-4 h-4" />
-              Volver a Política de Privacidad
-            </Link>
+            <div class="flex items-center gap-2">
+              <button
+                v-if="usuario"
+                type="button"
+                @click="rechazarYSalir"
+                class="px-4 py-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer transition"
+              >
+                <component :is="Lucide.XCircle" class="w-4 h-4" />
+                <span>No acepto (Salir)</span>
+              </button>
+              <Link :href="buildUrl('/politica-privacidad?revisar=1')" class="btn-menta-outline text-xs !py-2.5">
+                <component :is="Lucide.ArrowLeft" class="w-4 h-4" />
+                Volver a Política
+              </Link>
+            </div>
 
             <button
               type="submit"
@@ -209,7 +223,7 @@
               class="btn-menta text-xs !py-2.5 !px-6 disabled:opacity-50"
             >
               <component :is="Lucide.CheckCircle2" class="w-4 h-4" />
-              <span>{{ form.processing ? 'Procesando...' : 'Aceptar Términos y Condiciones' }}</span>
+              <span>{{ form.processing ? 'Aceptando y enviando correos...' : 'Aceptar Términos y Condiciones' }}</span>
             </button>
           </div>
         </form>
@@ -268,5 +282,9 @@ function confirmarTerminos() {
       mostrarConfirmacion.value = true;
     },
   });
+}
+
+function rechazarYSalir() {
+  form.post(buildUrl('/onboarding/rechazar'));
 }
 </script>
