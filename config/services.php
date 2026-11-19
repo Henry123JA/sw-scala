@@ -13,6 +13,16 @@ return [
         'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
     ],
 
+    'pagofacil' => [
+        'base_url' => env('PAGOFACIL_BASE_URL', 'https://masterqr.pagofacil.com.bo/api/services/v2'),
+        'token_service' => env('PAGOFACIL_TOKEN_SERVICE'),
+        'token_secret' => env('PAGOFACIL_TOKEN_SECRET'),
+        'payment_method_id' => env('PAGOFACIL_PAYMENT_METHOD_ID', 34),
+        'commerce_id' => env('PAGOFACIL_COMMERCE_ID'),
+        'callback_url' => env('PAGOFACIL_CALLBACK_URL'),
+        'polling_interval_minutos' => env('PAGOFACIL_POLLING_INTERVAL_MINUTOS', 2),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
