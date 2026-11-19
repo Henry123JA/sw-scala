@@ -18,11 +18,21 @@ use App\Http\Controllers\ProgresoAcademicoController;
 use App\Http\Controllers\SeguimientoAcademicoController;
 use App\Http\Controllers\ReporteAcademicoController;
 use App\Http\Controllers\RiesgoAcademicoController;
+use App\Http\Controllers\PortalController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 
-Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
+// ── Sitio Corporativo Público y Flujo Legal de Primer Ingreso (Capítulo 7) ──
+Route::get('/', [PortalController::class, 'index'])->name('portal.home');
+Route::post('/contacto', [PortalController::class, 'enviarContacto'])->name('portal.contacto');
+Route::post('/api/agente/chat', [PortalController::class, 'chatAgente'])
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->name('portal.agente.chat');
+Route::get('/politica-privacidad', [PortalController::class, 'politicaPrivacidad'])->name('portal.politica');
+Route::post('/politica-privacidad/aceptar', [PortalController::class, 'aceptarPolitica'])->name('portal.politica.aceptar');
+Route::get('/terminos-condiciones', [PortalController::class, 'terminosCondiciones'])->name('portal.terminos');
+Route::post('/terminos-condiciones/aceptar', [PortalController::class, 'aceptarTerminos'])->name('portal.terminos.aceptar');
+Route::get('/bienvenida', [PortalController::class, 'bienvenida'])->name('portal.bienvenida');
+Route::post('/onboarding/reiniciar', [PortalController::class, 'reiniciarOnboarding'])->name('portal.onboarding.reiniciar');
 
 Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
     // ── Gestión y Consulta de Asistencias — HU8 ─────────────────────────────

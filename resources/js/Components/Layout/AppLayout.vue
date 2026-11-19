@@ -16,6 +16,9 @@
       <!-- Footer Visits Stats -->
       <Footer />
     </div>
+
+    <!-- Agente de Atención SCALA Global (Opción A3: Disponible también dentro del Panel) -->
+    <AgenteScalaWidget modo="panel" />
   </div>
 </template>
 
@@ -23,6 +26,7 @@
 import Sidebar from './Sidebar.vue';
 import Header from './Header.vue';
 import Footer from './Footer.vue';
+import AgenteScalaWidget from '@/Components/Chat/AgenteScalaWidget.vue';
 </script>
 
 <style scoped>

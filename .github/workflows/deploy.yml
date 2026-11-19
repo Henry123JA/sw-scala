@@ -1,0 +1,78 @@
+name: Deploy SCALA to AWS EC2
+
+on:
+  # Se dispara automáticamente TANTO en 'git push origin main'
+  # COMO cuando haces Merge de cualquier rama o Pull Request hacia 'main'
+  push:
+    branches:
+      - main
+  # También permite ejecutarlo manualmente con 1 clic desde la pestaña Actions de GitHub
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build Frontend & Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout del código fuente
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar Node.js 20 en GitHub Actions
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 3. Instalar dependencias y compilar Vue/Vite en la nube (0 carga de RAM para la EC2)
+        env:
+          VITE_APP_NAME: Scala
+          VITE_BASE_URL: ""
+        run: |
+          npm ci || npm install
+          npm run build
+          tar -czf build-assets.tar.gz public/build public/images
+
+      - name: 4. Configurar llave SSH hacia la instancia EC2
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: 5. Subir assets compilados (public/build) a la instancia EC2
+        run: |
+          scp -o StrictHostKeyChecking=no build-assets.tar.gz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/build-assets.tar.gz
+
+      - name: 6. Actualizar código, migraciones y cachés en la instancia EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'bash -s' << 'EOF'
+            set -e
+
+            APP_DIR="/var/www/sw-scala"
+            echo "➡️ Desplegando en: $APP_DIR"
+            cd "$APP_DIR"
+
+            # 1. Traer los últimos cambios de la rama main (push o merge)
+            git fetch origin main
+            git reset --hard origin/main
+
+            # 2. Extraer el frontend ya compilado por GitHub Actions
+            rm -rf public/build
+            tar -xzf /tmp/build-assets.tar.gz -C "$APP_DIR"
+            rm -f /tmp/build-assets.tar.gz
+
+            # 3. Instalar dependencias PHP de producción
+            composer install --no-dev --optimize-autoloader --no-interaction
+
+            # 4. Ejecutar nuevas migraciones de PostgreSQL sin borrar datos
+            php artisan migrate --force
+
+            # 5. Limpiar y recargar cachés de Laravel
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            echo "✅ Despliegue completado con éxito en techmusic.work"
+          EOF

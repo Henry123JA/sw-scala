@@ -24,6 +24,8 @@ class Usuario extends Authenticatable
         'password',
         'rol_id',
         'foto',
+        'politica_aceptada_at',
+        'terminos_aceptados_at',
         'eliminado',
     ];
 
@@ -35,6 +37,8 @@ class Usuario extends Authenticatable
     protected $casts = [
         'eliminado' => 'boolean',
         'password' => 'hashed',
+        'politica_aceptada_at' => 'datetime',
+        'terminos_aceptados_at' => 'datetime',
     ];
 
     /**

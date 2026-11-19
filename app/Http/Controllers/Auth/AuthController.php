@@ -33,6 +33,17 @@ class AuthController extends Controller
         // Regenerar sesión para mitigar ataques de fijación de sesión
         $request->session()->regenerate();
 
+        $user = $request->user();
+
+        // Si es el primer inicio de sesión (aún no aceptó Política de Privacidad o Términos)
+        if ($user && ($request->boolean('primer_ingreso') || is_null($user->politica_aceptada_at))) {
+            return redirect()->route('portal.politica', ['revisar' => 1, 'onboarding' => 1]);
+        }
+
+        if ($user && is_null($user->terminos_aceptados_at)) {
+            return redirect()->route('portal.terminos', ['revisar' => 1, 'onboarding' => 1]);
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 

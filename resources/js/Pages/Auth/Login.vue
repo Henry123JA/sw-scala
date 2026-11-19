@@ -2,16 +2,16 @@
   <div class="min-h-screen flex items-center justify-center bg-[#F8FFFD] px-4 font-sans select-none">
     <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm border border-[#DDEFEA]">
       <div class="text-center">
-        <!-- Application Title with Music Badge -->
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#D1FAE5] text-[#0F766E] mb-3 shadow-xs">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 18V5l12-2v13"></path>
-            <circle cx="6" cy="18" r="3"></circle>
-            <circle cx="18" cy="16" r="3"></circle>
-          </svg>
+        <!-- Application Title with Official SCALA Image -->
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white p-1 border-2 border-[#14B8A6]/40 mb-3 shadow-sm overflow-hidden">
+          <img
+            :src="buildUrl('/images/academia-scala.jpg')"
+            alt="Academia de Música SCALA"
+            class="w-full h-full object-cover rounded-xl"
+          />
         </div>
         <h2 class="text-2xl font-black tracking-tight text-[#1F2937]">
-          Scala Musical
+          Academia de Música SCALA
         </h2>
         <p class="mt-1 text-xs text-[#6B7280]">
           Ingresa tus credenciales para acceder al sistema académico
@@ -62,10 +62,22 @@
               {{ form.errors.password }}
             </p>
           </div>
+
+          <!-- Opción de Primer Inicio de Sesión (Onboarding Legal Fig. 7.9 a 7.14) -->
+          <div class="pt-1">
+            <label class="flex items-center gap-2 text-xs text-[#6B7280] cursor-pointer">
+              <input
+                type="checkbox"
+                v-model="form.primer_ingreso"
+                class="w-3.5 h-3.5 accent-[#14B8A6] rounded cursor-pointer"
+              />
+              <span>Primer inicio de sesión (verificar Políticas y Términos)</span>
+            </label>
+          </div>
         </div>
 
         <!-- Submit Button -->
-        <div>
+        <div class="space-y-3">
           <button
             type="submit"
             :disabled="form.processing"
@@ -74,6 +86,21 @@
             <span v-if="form.processing">Iniciando sesión...</span>
             <span v-else>Iniciar Sesión</span>
           </button>
+
+          <div class="text-center pt-2 border-t border-[#DDEFEA] flex items-center justify-between text-xs text-[#6B7280]">
+            <Link :href="buildUrl('/')" class="text-[#0F766E] font-bold hover:underline">
+              ← Volver al portal corporativo
+            </Link>
+            <div class="space-x-2">
+              <Link :href="buildUrl('/politica-privacidad')" class="hover:text-[#0F766E] hover:underline">
+                Privacidad
+              </Link>
+              <span>·</span>
+              <Link :href="buildUrl('/terminos-condiciones')" class="hover:text-[#0F766E] hover:underline">
+                Términos
+              </Link>
+            </div>
+          </div>
         </div>
       </form>
     </div>
@@ -81,7 +108,7 @@
 </template>
 
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 
 const baseUrl = import.meta.env.VITE_BASE_URL || '';
 const buildUrl = (path) => {
@@ -95,6 +122,7 @@ const form = useForm({
   email: '',
   password: '',
   remember: false,
+  primer_ingreso: false,
 });
 
 const submit = () => {
