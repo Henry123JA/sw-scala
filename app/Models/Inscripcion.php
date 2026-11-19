@@ -21,15 +21,27 @@ class Inscripcion extends Model
         'fecha_retorno',
         'fecha_retiro',
         'estado',
+        'monto_inscripcion',
+        'estado_pago',
+        'metodo_pago',
+        'fecha_pago',
+        'numero_recibo',
+        'pagofacil_transaction_id',
+        'pagofacil_payment_number',
+        'pagofacil_qr_base64',
+        'pagofacil_qr_expira',
         'observaciones',
     ];
 
     protected $casts = [
-        'fecha'              => 'date',
-        'fecha_inicio_clases'=> 'date',
-        'fecha_pausa'        => 'date',
-        'fecha_retorno'      => 'date',
-        'fecha_retiro'       => 'date',
+        'fecha'               => 'date',
+        'fecha_inicio_clases' => 'date',
+        'fecha_pausa'         => 'date',
+        'fecha_retorno'       => 'date',
+        'fecha_retiro'        => 'date',
+        'monto_inscripcion'   => 'float',
+        'fecha_pago'          => 'datetime',
+        'pagofacil_qr_expira' => 'datetime',
     ];
 
     public function alumno(): BelongsTo

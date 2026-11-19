@@ -88,6 +88,8 @@ class InscripcionService
                 'fecha_inicio_clases' => $fechaInicio,
                 'estado'              => 'ACTIVA',
                 'observaciones'       => $data['observaciones'] ?? null,
+                'monto_inscripcion'   => $data['monto_inscripcion'] ?? 150.00,
+                'estado_pago'         => 'PENDIENTE',
             ]);
         });
     }
@@ -102,6 +104,7 @@ class InscripcionService
         $inscripcion->update(array_filter([
             'fecha_inicio_clases' => $data['fecha_inicio_clases'] ?? null,
             'observaciones'       => $data['observaciones'] ?? null,
+            'monto_inscripcion'   => $data['monto_inscripcion'] ?? null,
         ], fn($v) => $v !== null));
 
         return $inscripcion->fresh();
@@ -181,5 +184,194 @@ class InscripcionService
     public function eliminar(int $id): void
     {
         $this->cancelar($id, ['fecha_retiro' => now()->toDateString()]);
+    }
+
+    /**
+     * Registrar pago en efectivo de la inscripción (Propietario / Secretaria).
+     */
+    public function iniciarPagoEfectivo(int $inscripcionId, array $data = []): Inscripcion
+    {
+        return DB::transaction(function () use ($inscripcionId, $data) {
+            $inscripcion = Inscripcion::with(['alumno.usuario', 'grupo.curso'])->findOrFail($inscripcionId);
+
+            if ($inscripcion->estado_pago === 'PAGADO') {
+                throw new BusinessException('Esta inscripción ya se encuentra pagada.', 'general');
+            }
+
+            $monto = isset($data['monto_inscripcion']) && (float) $data['monto_inscripcion'] > 0
+                ? (float) $data['monto_inscripcion']
+                : ((float) ($inscripcion->monto_inscripcion ?: 150.00));
+
+            $recibo = $this->generarCorrelativoRecibo();
+
+            $inscripcion->update([
+                'monto_inscripcion' => $monto,
+                'estado_pago'       => 'PAGADO',
+                'metodo_pago'       => 'EFECTIVO',
+                'fecha_pago'        => now(),
+                'numero_recibo'     => $recibo,
+            ]);
+
+            return $inscripcion->fresh(['alumno.usuario', 'grupo.curso', 'grupo.docente.usuario']);
+        });
+    }
+
+    /**
+     * Iniciar o reutilizar QR de PagoFácil para el pago de la inscripción.
+     */
+    public function iniciarPagoQR(int $inscripcionId, array $data = []): Inscripcion
+    {
+        return DB::transaction(function () use ($inscripcionId, $data) {
+            $inscripcion = Inscripcion::with(['alumno.usuario', 'grupo.curso'])->findOrFail($inscripcionId);
+
+            if ($inscripcion->estado_pago === 'PAGADO') {
+                throw new BusinessException('Esta inscripción ya se encuentra pagada.', 'general');
+            }
+
+            $montoNuevo = isset($data['monto_inscripcion']) && (float) $data['monto_inscripcion'] > 0
+                ? (float) $data['monto_inscripcion']
+                : ((float) ($inscripcion->monto_inscripcion ?: 150.00));
+
+            $forzarRegenerar = !empty($data['regenerar']) || ((float) $inscripcion->monto_inscripcion !== $montoNuevo);
+
+            // Reutilizar QR vigente si aún no expiró y no se pidió regenerar
+            if (
+                !$forzarRegenerar
+                && $inscripcion->estado_pago === 'PENDIENTE_QR'
+                && $inscripcion->pagofacil_qr_expira
+                && $inscripcion->pagofacil_qr_expira > now()
+                && !empty($inscripcion->pagofacil_qr_base64)
+            ) {
+                return $inscripcion;
+            }
+
+            $usuario = $inscripcion->alumno?->usuario;
+            if (!$usuario) {
+                throw new BusinessException('No se encontraron los datos del alumno para generar el QR.', 'general');
+            }
+
+            $cursoNombre = $inscripcion->grupo?->curso?->nombre ?? 'Curso Musical';
+            $grupoNombre = $inscripcion->grupo?->nombre ?? 'Grupo';
+            $paymentNumber = 'SCALA-INS-' . $inscripcion->id . '-' . time();
+
+            /** @var PagoFacilService $pagoFacil */
+            $pagoFacil = app(PagoFacilService::class);
+
+            $qrData = $pagoFacil->generarQR([
+                'client_name'       => trim($usuario->nombres . ' ' . $usuario->apellidos),
+                'document_id'       => (string) ($usuario->ci ?? '0000000'),
+                'phone_number'      => (string) ($usuario->telefono ?: '70000000'),
+                'email'             => (string) ($usuario->correo ?: 'pagos@techmusic.work'),
+                'payment_number'    => $paymentNumber,
+                'amount'            => $montoNuevo,
+                ' order_description' => "Inscripción SCALA - {$cursoNombre} ({$grupoNombre})",
+                'order_description' => "Inscripción SCALA - {$cursoNombre} ({$grupoNombre})",
+                'client_code'       => (string) ($inscripcion->alumno->codigo ?? $usuario->id),
+            ]);
+
+            $inscripcion->update([
+                'monto_inscripcion'        => $montoNuevo,
+                'estado_pago'              => 'PENDIENTE_QR',
+                'metodo_pago'              => 'QR',
+                'pagofacil_transaction_id' => $qrData['transaction_id'],
+                'pagofacil_payment_number' => $paymentNumber,
+                'pagofacil_qr_base64'      => $qrData['qr_base64'],
+                'pagofacil_qr_expira'      => $qrData['expiration_date'],
+            ]);
+
+            return $inscripcion->fresh(['alumno.usuario', 'grupo.curso', 'grupo.docente.usuario']);
+        });
+    }
+
+    /**
+     * Confirmar el pago QR de una inscripción (vía Callback de PagoFácil o consulta activa).
+     */
+    public function confirmarPagoQR(string $paymentNumber, ?string $fechaPago = null): bool
+    {
+        return DB::transaction(function () use ($paymentNumber, $fechaPago) {
+            $inscripcion = Inscripcion::where('pagofacil_payment_number', $paymentNumber)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$inscripcion) {
+                return false;
+            }
+
+            if ($inscripcion->estado_pago === 'PAGADO') {
+                return true;
+            }
+
+            $recibo = $this->generarCorrelativoRecibo();
+
+            $inscripcion->update([
+                'estado_pago'   => 'PAGADO',
+                'metodo_pago'   => 'QR',
+                'fecha_pago'    => $fechaPago ? Carbon::parse($fechaPago) : now(),
+                'numero_recibo' => $recibo,
+            ]);
+
+            return true;
+        });
+    }
+
+    /**
+     * Verificar estado de pago QR para el polling desde el modal Vue.
+     */
+    public function verificarEstadoQR(string $paymentNumber): array
+    {
+        $inscripcion = Inscripcion::where('pagofacil_payment_number', $paymentNumber)->first();
+
+        if (!$inscripcion) {
+            return [
+                'estado' => 'NO_ENCONTRADO',
+                'recibo' => null,
+            ];
+        }
+
+        // Si sigue PENDIENTE_QR y tenemos transaction_id, consultamos a PagoFácil por si el callback aún no llegó
+        if ($inscripcion->estado_pago === 'PENDIENTE_QR' && !empty($inscripcion->pagofacil_transaction_id)) {
+            try {
+                /** @var PagoFacilService $pagoFacil */
+                $pagoFacil = app(PagoFacilService::class);
+                $txValues = $pagoFacil->queryTransaction((string) $inscripcion->pagofacil_transaction_id);
+
+                $paymentStatus = $txValues['paymentStatus'] ?? $txValues['status'] ?? null;
+                // En PagoFácil MasterQR v2, paymentStatus == 2 o 5 suele indicar pagado/completado
+                if (in_array((int) $paymentStatus, [2, 5], true)) {
+                    $this->confirmarPagoQR($paymentNumber);
+                    $inscripcion->refresh();
+                }
+            } catch (\Throwable $e) {
+                // Ignorar error de red en polling y devolver estado local
+            }
+        }
+
+        return [
+            'estado'     => $inscripcion->estado_pago,
+            'recibo'     => $inscripcion->numero_recibo,
+            'fecha_pago' => $inscripcion->fecha_pago?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Genera un correlativo único de recibo para inscripciones: REC-INS-YYYY-0001
+     */
+    private function generarCorrelativoRecibo(): string
+    {
+        $year = date('Y');
+        $prefix = "REC-INS-{$year}-";
+
+        $lastInscripcion = Inscripcion::where('numero_recibo', 'like', "{$prefix}%")
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (!$lastInscripcion || !$lastInscripcion->numero_recibo) {
+            return $prefix . '0001';
+        }
+
+        $lastNumber = (int) str_replace($prefix, '', $lastInscripcion->numero_recibo);
+        $nextNumber = $lastNumber + 1;
+
+        return $prefix . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }

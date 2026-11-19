@@ -56,6 +56,7 @@
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Fecha Inscripción</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Inicio de Clases</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Estado</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-600">Pago Matrícula</th>
               <th class="px-4 py-3 text-left font-semibold text-gray-600">Acciones</th>
             </tr>
           </thead>
@@ -90,7 +91,39 @@
                 </span>
               </td>
               <td class="px-4 py-3">
+                <div class="flex flex-col items-start gap-0.5">
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
+                    :class="{
+                      'bg-emerald-100 text-emerald-700': ins.estado_pago === 'PAGADO',
+                      'bg-amber-100 text-amber-700': ins.estado_pago === 'PENDIENTE_QR',
+                      'bg-gray-100 text-gray-600': !ins.estado_pago || ins.estado_pago === 'PENDIENTE'
+                    }"
+                  >
+                    {{ ins.estado_pago === 'PAGADO' ? `✓ PAGADO (${ins.metodo_pago || 'QR'})` : (ins.estado_pago === 'PENDIENTE_QR' ? '⏳ QR GENERADO' : 'PENDIENTE') }}
+                  </span>
+                  <span class="text-xs text-gray-500 font-medium">
+                    Bs. {{ Number(ins.monto_inscripcion || 150).toFixed(2) }}
+                  </span>
+                  <span v-if="ins.numero_recibo" class="text-[11px] text-emerald-600 font-mono">
+                    {{ ins.numero_recibo }}
+                  </span>
+                </div>
+              </td>
+              <td class="px-4 py-3">
                 <div class="flex items-center gap-1">
+                  <button
+                    v-if="canPay && ins.estado !== 'CANCELADA'"
+                    type="button"
+                    @click="abrirModalPago(ins)"
+                    class="rounded px-2.5 py-1 text-xs font-semibold cursor-pointer transition flex items-center gap-1"
+                    :class="ins.estado_pago === 'PAGADO'
+                      ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                      : 'bg-teal-600 text-white hover:bg-teal-700 shadow-xs'"
+                    :title="ins.estado_pago === 'PAGADO' ? 'Ver comprobante de pago' : 'Pagar matrícula con QR PagoFácil o Efectivo'"
+                  >
+                    <span>{{ ins.estado_pago === 'PAGADO' ? '🧾 Recibo' : '📱 Pagar QR' }}</span>
+                  </button>
                   <Link
                     :href="buildUrl(`/inscripciones/${ins.id}`)"
                     class="rounded px-2 py-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 cursor-pointer"
@@ -118,13 +151,20 @@
               </td>
             </tr>
             <tr v-if="inscripciones.data.length === 0">
-              <td colspan="6" class="px-4 py-8 text-center text-gray-400">
+              <td colspan="7" class="px-4 py-8 text-center text-gray-400">
                 No se encontraron inscripciones.
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <!-- Modal de Pago PagoFácil QR / Efectivo -->
+      <PagarInscripcionModal
+        :show="showPagoModal"
+        :inscripcion="inscripcionSeleccionadaActual"
+        @close="showPagoModal = false"
+      />
 
       <!-- Pagination -->
       <div v-if="inscripciones.last_page > 1" class="flex items-center justify-between text-sm text-gray-600">
@@ -158,6 +198,7 @@
 import { ref, computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
+import PagarInscripcionModal from './PagarInscripcionModal.vue';
 import * as Lucide from '@lucide/vue';
 
 const baseUrl = import.meta.env.VITE_BASE_URL || '';
@@ -176,7 +217,21 @@ const props = defineProps({
 
 const page = usePage();
 const canEdit = computed(() => ['Propietario', 'Secretaria'].includes(page.props.auth?.rol));
+const canPay = computed(() => ['Propietario', 'Secretaria', 'Alumno'].includes(page.props.auth?.rol));
 const canDelete = computed(() => page.props.auth?.rol === 'Propietario');
+
+const showPagoModal = ref(false);
+const inscripcionSeleccionadaId = ref(null);
+
+const inscripcionSeleccionadaActual = computed(() => {
+  if (!inscripcionSeleccionadaId.value || !props.inscripciones?.data) return null;
+  return props.inscripciones.data.find((i) => i.id === inscripcionSeleccionadaId.value) || null;
+});
+
+function abrirModalPago(ins) {
+  inscripcionSeleccionadaId.value = ins.id;
+  showPagoModal.value = true;
+}
 
 const searchTerm = ref(props.buscar || '');
 const selectedEstado = ref(props.estado || '');

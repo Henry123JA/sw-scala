@@ -157,4 +157,58 @@ class InscripcionController extends Controller
             return back()->withErrors([$e->getField() => $e->getMessage()]);
         }
     }
+
+    /**
+     * Registrar pago de inscripción en efectivo (Propietario / Secretaria).
+     */
+    public function pagarEfectivo(Request $request, int $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'monto_inscripcion' => ['nullable', 'numeric', 'min:1'],
+        ]);
+
+        try {
+            $ins = $this->inscripcionService->iniciarPagoEfectivo($id, $validated);
+            return back()->with('success', "Pago en efectivo registrado correctamente. Recibo: {$ins->numero_recibo}");
+        } catch (BusinessException $e) {
+            return back()->withErrors([$e->getField() => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Generar o recuperar QR de PagoFácil para una inscripción.
+     */
+    public function iniciarPagoQR(Request $request, int $id): RedirectResponse
+    {
+        $inscripcion = $this->inscripcionService->obtenerPorId($id);
+
+        // Si es Alumno, solo puede generar QR de su propia inscripción
+        if (auth()->user()?->rol?->nombre === 'Alumno' && $inscripcion->alumno_id !== auth()->id()) {
+            abort(403, 'No autorizado para pagar esta inscripción.');
+        }
+
+        $validated = $request->validate([
+            'monto_inscripcion' => ['nullable', 'numeric', 'min:1'],
+            'regenerar'         => ['nullable', 'boolean'],
+        ]);
+
+        try {
+            $this->inscripcionService->iniciarPagoQR($id, $validated);
+            return back()->with('success', 'Código QR de PagoFácil generado exitosamente.');
+        } catch (BusinessException $e) {
+            return back()->withErrors([$e->getField() => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            return back()->withErrors(['general' => 'Error al conectar con PagoFácil: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Endpoint JSON de polling para verificar si el QR ya fue pagado.
+     */
+    public function verificarEstadoQR(string $paymentNumber): \Illuminate\Http\JsonResponse
+    {
+        $resultado = $this->inscripcionService->verificarEstadoQR($paymentNumber);
+
+        return response()->json($resultado);
+    }
 }

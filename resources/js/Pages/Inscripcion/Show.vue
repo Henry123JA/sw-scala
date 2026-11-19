@@ -12,6 +12,49 @@
         </Link>
       </div>
 
+      <!-- Card de Pago de Matrícula (PagoFácil QR / Efectivo) -->
+      <div class="rounded-lg border border-teal-200 bg-gradient-to-r from-teal-50/70 to-white p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2.5">
+            <span class="text-base font-bold text-gray-800">Matrícula / Inscripción:</span>
+            <span
+              class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold"
+              :class="{
+                'bg-emerald-100 text-emerald-700': inscripcion.estado_pago === 'PAGADO',
+                'bg-amber-100 text-amber-700': inscripcion.estado_pago === 'PENDIENTE_QR',
+                'bg-gray-100 text-gray-700': !inscripcion.estado_pago || inscripcion.estado_pago === 'PENDIENTE'
+              }"
+            >
+              {{ inscripcion.estado_pago === 'PAGADO' ? `✓ PAGADO (${inscripcion.metodo_pago || 'QR'})` : (inscripcion.estado_pago === 'PENDIENTE_QR' ? '⏳ QR PENDIENTE DE PAGO' : 'PENDIENTE DE PAGO') }}
+            </span>
+            <span class="text-sm font-extrabold text-teal-700">
+              Bs. {{ Number(inscripcion.monto_inscripcion || 150).toFixed(2) }}
+            </span>
+          </div>
+          <p class="text-xs text-gray-500">
+            <span v-if="inscripcion.estado_pago === 'PAGADO'">
+              Comprobante emitido: <strong class="font-mono text-emerald-700">{{ inscripcion.numero_recibo }}</strong>
+              <span v-if="inscripcion.fecha_pago"> — Fecha: {{ formatDate(inscripcion.fecha_pago) }}</span>
+            </span>
+            <span v-else>
+              Paga la matrícula escaneando el código QR interoperable de PagoFácil desde cualquier app bancaria boliviana.
+            </span>
+          </p>
+        </div>
+
+        <button
+          v-if="canPay && inscripcion.estado !== 'CANCELADA'"
+          type="button"
+          @click="showPagoModal = true"
+          class="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-xs transition cursor-pointer shrink-0"
+          :class="inscripcion.estado_pago === 'PAGADO'
+            ? 'bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50'
+            : 'bg-teal-600 text-white hover:bg-teal-700'"
+        >
+          <span>{{ inscripcion.estado_pago === 'PAGADO' ? '🧾 Ver Comprobante de Pago' : '📱 Pagar Matrícula (QR PagoFácil)' }}</span>
+        </button>
+      </div>
+
       <!-- Action Box for Pause/Resume/Cancel -->
       <div v-if="canEdit" class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -314,6 +357,13 @@
       @close="showModal = false"
       @created="onObservacionCreated"
     />
+
+    <!-- Modal para Pago de Matrícula con QR PagoFácil / Efectivo -->
+    <PagarInscripcionModal
+      :show="showPagoModal"
+      :inscripcion="inscripcion"
+      @close="showPagoModal = false"
+    />
   </AppLayout>
 </template>
 
@@ -322,6 +372,7 @@ import { ref, computed, h } from 'vue';
 import { Link, useForm, usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import ObservacionesModal from '@/Components/ObservacionesModal.vue';
+import PagarInscripcionModal from './PagarInscripcionModal.vue';
 
 const baseUrl = import.meta.env.VITE_BASE_URL || '';
 const buildUrl = (path) => {
@@ -342,6 +393,7 @@ const props = defineProps({
 const page = usePage();
 const activeTab = ref('general');
 const showModal = ref(false);
+const showPagoModal = ref(false);
 
 const observacionesList = computed(() => props.observaciones || []);
 
@@ -349,6 +401,7 @@ const authUser = computed(() => page.props.auth?.user);
 const authRole = computed(() => page.props.auth?.rol);
 
 const canEdit = computed(() => ['Propietario', 'Secretaria'].includes(authRole.value));
+const canPay = computed(() => ['Propietario', 'Secretaria', 'Alumno'].includes(authRole.value));
 const canAddObservacion = computed(() => ['Propietario', 'Secretaria', 'Docente'].includes(authRole.value));
 
 function canDeleteObservacion(obs) {

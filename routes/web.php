@@ -19,6 +19,7 @@ use App\Http\Controllers\SeguimientoAcademicoController;
 use App\Http\Controllers\ReporteAcademicoController;
 use App\Http\Controllers\RiesgoAcademicoController;
 use App\Http\Controllers\PortalController;
+use App\Http\Controllers\PagoFacilCallbackController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 
 // ── Sitio Corporativo Público y Flujo Legal de Primer Ingreso (Capítulo 7) ──
@@ -168,6 +169,12 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
     });
     Route::get('/inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
     Route::get('/inscripciones/{id}', [InscripcionController::class, 'show'])->name('inscripciones.show')->whereNumber('id');
+    Route::post('/inscripciones/{id}/iniciar-pago-qr', [InscripcionController::class, 'iniciarPagoQR'])
+        ->middleware(['role:Propietario,Secretaria,Alumno'])
+        ->name('inscripciones.pagar.qr')
+        ->whereNumber('id');
+    Route::get('/api/inscripciones/verificar-qr/{paymentNumber}', [InscripcionController::class, 'verificarEstadoQR'])
+        ->name('inscripciones.verificar.qr');
 
     Route::middleware(['role:Propietario,Secretaria'])->group(function () {
         Route::get('/inscripciones/crear', [InscripcionController::class, 'create'])->name('inscripciones.create');
@@ -178,6 +185,7 @@ Route::middleware(['auth', 'bitacora', 'pagina.visitada'])->group(function () {
         Route::post('/inscripciones/{id}/pausar', [InscripcionController::class, 'pause'])->name('inscripciones.pause')->whereNumber('id');
         Route::post('/inscripciones/{id}/reanudar', [InscripcionController::class, 'resume'])->name('inscripciones.resume')->whereNumber('id');
         Route::post('/inscripciones/{id}/cancelar', [InscripcionController::class, 'cancel'])->name('inscripciones.cancel')->whereNumber('id');
+        Route::post('/inscripciones/{id}/pagar-efectivo', [InscripcionController::class, 'pagarEfectivo'])->name('inscripciones.pagar.efectivo')->whereNumber('id');
     });
 
     // ── Observaciones Académicas — HU12 ──────────────────────────────────────
@@ -205,5 +213,10 @@ Route::post('/api/ml/webhook-alertas', [RiesgoAcademicoController::class, 'apiWe
     ->withoutMiddleware([ValidateCsrfToken::class])
     ->middleware(\App\Http\Middleware\RequireMlServiceToken::class)
     ->name('api.ml.webhook');
+
+// ── Webhook de PagoFácil MasterQR para Pago de Inscripciones ─────────────────
+Route::post('/webhooks/pagofacil/callback', [PagoFacilCallbackController::class, 'handle'])
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->name('webhooks.pagofacil.callback');
 
 require __DIR__.'/auth.php';
