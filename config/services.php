@@ -8,6 +8,11 @@ return [
         'timeout' => (int) env('ML_SERVICE_TIMEOUT', 10),
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY', ''),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

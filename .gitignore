@@ -59,6 +59,9 @@ desktop.ini
 .phpunit.result.cache
 .phpunit.cache/
 coverage/
+tests/Feature/CicloAcademicoYFallbackServiceTest.php
+tests/Unit/
+test_*.php
 
 
 # =========================
