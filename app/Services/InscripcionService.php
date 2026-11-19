@@ -251,32 +251,31 @@ class InscripcionService
             }
 
             $cursoNombre = $inscripcion->grupo?->curso?->nombre ?? 'Curso Musical';
-            $grupoNombre = $inscripcion->grupo?->nombre ?? 'Grupo';
+            $grupoNombre = $inscripcion->grupo?->codigo_grupo ?? $inscripcion->grupo?->nombre ?? 'Grupo';
             $paymentNumber = 'SCALA-INS-' . $inscripcion->id . '-' . time();
 
             /** @var PagoFacilService $pagoFacil */
             $pagoFacil = app(PagoFacilService::class);
 
-            $qrData = $pagoFacil->generarQR([
-                'client_name'       => trim($usuario->nombres . ' ' . $usuario->apellidos),
-                'document_id'       => (string) ($usuario->ci ?? '0000000'),
-                'phone_number'      => (string) ($usuario->telefono ?: '70000000'),
-                'email'             => (string) ($usuario->correo ?: 'pagos@techmusic.work'),
-                'payment_number'    => $paymentNumber,
-                'amount'            => $montoNuevo,
-                ' order_description' => "Inscripción SCALA - {$cursoNombre} ({$grupoNombre})",
-                'order_description' => "Inscripción SCALA - {$cursoNombre} ({$grupoNombre})",
-                'client_code'       => (string) ($inscripcion->alumno->codigo ?? $usuario->id),
-            ]);
+            $qrData = $pagoFacil->generarQR(
+                paymentNumber: $paymentNumber,
+                monto: $montoNuevo,
+                concept: "Inscripción SCALA - {$cursoNombre} ({$grupoNombre})",
+                email: (string) ($usuario->email ?: $usuario->correo ?: 'pagos@techmusic.work'),
+                clientName: trim($usuario->nombres . ' ' . $usuario->apellidos),
+                phone: (string) ($usuario->telefono ?: '70000000'),
+                documentId: (string) ($usuario->ci ?: '0000000'),
+                clientCode: (int) $usuario->id
+            );
 
             $inscripcion->update([
                 'monto_inscripcion'        => $montoNuevo,
                 'estado_pago'              => 'PENDIENTE_QR',
                 'metodo_pago'              => 'QR',
-                'pagofacil_transaction_id' => $qrData['transaction_id'],
+                'pagofacil_transaction_id' => $qrData['transactionId'],
                 'pagofacil_payment_number' => $paymentNumber,
-                'pagofacil_qr_base64'      => $qrData['qr_base64'],
-                'pagofacil_qr_expira'      => $qrData['expiration_date'],
+                'pagofacil_qr_base64'      => $qrData['qrBase64'],
+                'pagofacil_qr_expira'      => $qrData['expirationDate'],
             ]);
 
             return $inscripcion->fresh(['alumno.usuario', 'grupo.curso', 'grupo.docente.usuario']);
@@ -333,10 +332,14 @@ class InscripcionService
             try {
                 /** @var PagoFacilService $pagoFacil */
                 $pagoFacil = app(PagoFacilService::class);
-                $txValues = $pagoFacil->queryTransaction((string) $inscripcion->pagofacil_transaction_id);
+                $txResponse = $pagoFacil->queryTransaction((string) $inscripcion->pagofacil_transaction_id);
+                $txValues = $txResponse['values'] ?? $txResponse;
+                if (is_string($txValues)) {
+                    $txValues = json_decode($txValues, true) ?: [];
+                }
 
                 $paymentStatus = $txValues['paymentStatus'] ?? $txValues['status'] ?? null;
-                // En PagoFácil MasterQR v2, paymentStatus == 2 o 5 suele indicar pagado/completado
+                // En PagoFácil MasterQR v2, paymentStatus == 2 o 5 indica pagado/completado
                 if (in_array((int) $paymentStatus, [2, 5], true)) {
                     $this->confirmarPagoQR($paymentNumber);
                     $inscripcion->refresh();
