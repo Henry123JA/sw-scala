@@ -18,10 +18,10 @@ jobs:
       - name: 1. Checkout del código fuente
         uses: actions/checkout@v4
 
-      - name: 2. Configurar Node.js 20 en GitHub Actions
+      - name: 2. Configurar Node.js en GitHub Actions
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: 3. Instalar dependencias y compilar Vue/Vite en la nube (0 carga de RAM para la EC2)
@@ -51,7 +51,19 @@ jobs:
 
             APP_DIR="/var/www/sw-scala"
             echo "➡️ Desplegando en: $APP_DIR"
+
+            # Asegurar permisos del usuario ubuntu sobre la carpeta y evitar error 128 (dubious ownership) de Git
+            sudo chown -R $USER:www-data "$APP_DIR"
+            git config --global --add safe.directory "$APP_DIR"
+
             cd "$APP_DIR"
+
+            # Asegurar que el remote origin use HTTPS público (evita exit code 128 por SSH key de GitHub)
+            REMOTE_URL=$(git config --get remote.origin.url || true)
+            if [[ "$REMOTE_URL" == git@github.com:* ]]; then
+              HTTPS_URL="https://github.com/${REMOTE_URL#git@github.com:}"
+              git remote set-url origin "$HTTPS_URL"
+            fi
 
             # 1. Traer los últimos cambios de la rama main (push o merge)
             git fetch origin main
@@ -73,6 +85,10 @@ jobs:
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
+
+            # 6. Asegurar permisos de escritura de Nginx/PHP-FPM en storage y cache
+            sudo chown -R www-data:www-data "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
+            sudo chmod -R 775 "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
 
             echo "✅ Despliegue completado con éxito en techmusic.work"
           EOF
